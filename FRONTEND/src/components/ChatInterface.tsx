@@ -119,20 +119,26 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
     setIsLoading(true);
 
     try {
-      const webhookUrl = "http://localhost:5678/webhook/ia-soporte-facturacion";
+      const webhookUrl = "http://localhost:5678/webhook/ia-soporte-{endpoint}";
       let response;
 
       if (selectedImage) {
         const formData = new FormData();
         formData.append("message", currentInput || "Analiza esta imagen.");
         formData.append("image", selectedImage.file);
+        formData.append("userId", "1");
+        formData.append("clienteNombre", "Usuario Desconocido");
         response = await axios.post(webhookUrl, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       } else {
         response = await axios.post(
           webhookUrl,
-          { message: userMessage.content },
+          {
+            message: userMessage.content,
+            userId: "1",
+            clienteNombre: "Usuario Desconocido",
+          },
           { headers: { "Content-Type": "application/json" } }
         );
       }
@@ -194,6 +200,10 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
     };
     setChats((prev) => [newChat, ...prev]);
     setActiveChat(newChat.id);
+  };
+
+  const handleOpenTicket = () => {
+    alert("Funcionalidad 'Abrir ticket' en desarrollo. Pronto podrás crear un ticket desde aquí.");
   };
 
   const formatTime = (date: Date) => {
@@ -281,7 +291,7 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
         </div>
       </div>
       <div className="flex-1 flex flex-col">
-        <div className="p-4 border-b border-border/50 bg-card/30 backdrop-blur-sm">
+        <div className="p-4 border-b border-border/50 bg-card/30 backdrop-blur-sm flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-accent text-accent-foreground">
@@ -297,6 +307,14 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
               </p>
             </div>
           </div>
+          <Button
+  size="sm"
+  variant="ghost"
+  onClick={handleOpenTicket}
+  className="ml-auto bg-gradient-primary text-white font-sans font-bold text-lg tracking-wide rounded-lg px-6 py-2 shadow-md hover:shadow-lg transition-all duration-200 bg-[length:100%_100%]"
+          >
+            Abrir ticket
+          </Button>
         </div>
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-4">
@@ -338,7 +356,9 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
                           className="max-w-[150px] max-h-[150px] rounded-md mb-2 object-cover"
                         />
                       )}
-                      <p className="text-sm leading-relaxed">{message.content}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                        {message.content}
+                      </p>
                     </CardContent>
                   </Card>
                   <span className="text-xs text-muted-foreground mt-1 block">

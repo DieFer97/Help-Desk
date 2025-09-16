@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  nombre       String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tickets      Ticket[]
+  chats        Chat[]
+}
+
+model Ticket {
+  id            Int      @id @default(autoincrement())
+  ticketId      String   @unique
+  clienteNombre String
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  fecha         DateTime @default(now())
+  asunto        String
+  detalle       String
+  imagenUrl     String?
+  estado        String   @default("pendiente")
+  adminNota     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Chat {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  title       String
+  lastMessage String?
+  timestamp   DateTime @default(now())
+  messages    Json[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
