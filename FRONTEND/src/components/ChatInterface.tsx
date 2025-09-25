@@ -308,11 +308,11 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
             </div>
           </div>
           <Button
-  size="sm"
-  variant="ghost"
-  onClick={handleOpenTicket}
-  className="ml-auto bg-gradient-primary text-white font-sans font-bold text-lg tracking-wide rounded-lg px-6 py-2 shadow-md hover:shadow-lg transition-all duration-200 bg-[length:100%_100%]"
-          >
+            size="sm"
+            variant="ghost"
+            onClick={handleOpenTicket}
+            className="ml-auto bg-gradient-primary text-white font-sans font-bold text-lg tracking-wide rounded-lg px-6 py-2 shadow-md hover:shadow-lg transition-all duration-200 bg-[length:100%_100%]"
+                    >
             Abrir ticket
           </Button>
         </div>

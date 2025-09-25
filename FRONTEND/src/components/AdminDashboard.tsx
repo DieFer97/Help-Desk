@@ -1,42 +1,34 @@
-import { useState } from "react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
 import {
   AlertTriangle,
-  Users,
-  MessageSquare,
-  TrendingUp,
-  Clock,
-  CheckCircle,
-  XCircle,
-  LogOut,
-  Settings,
   Bell,
+  CheckCircle,
+  Clock,
   Filter,
-  Download,
-  Brain,
-  Zap,
-  Shield
+  LogOut,
+  MessageSquare,
+  Settings,
+  Shield,
+  TrendingUp,
+  Users
 } from "lucide-react";
+import { useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from 'recharts';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -45,7 +37,6 @@ interface AdminDashboardProps {
 const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   const [activeFilter, setActiveFilter] = useState("all");
 
-  // Mock data - in real app would come from backend
   const stats = {
     totalUsers: 1247,
     activeChats: 89,
@@ -189,7 +180,7 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
               <Card className="glass-effect border-border/50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Tickets Críticos</CardTitle>
+                  <CardTitle className="text-sm font-medium">Tickets</CardTitle>
                   <AlertTriangle className="h-4 w-4 text-warning" />
                 </CardHeader>
                 <CardContent>
@@ -251,7 +242,7 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <AlertTriangle className="h-5 w-5 text-warning" />
-                      <span>Tickets Críticos</span>
+                      <span>Prioridad Crítica</span>
                     </div>
                     <Button size="sm" variant="ghost">
                       <Filter className="h-4 w-4" />

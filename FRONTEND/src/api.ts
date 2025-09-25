@@ -1,4 +1,3 @@
-// FRONTEND/src/api.ts
 export const enviarPregunta = async (pregunta: string): Promise<string> => {
   try {
     const response = await fetch('http://localhost:5678/webhook/ia-soporte-facturacion', {
@@ -8,7 +7,7 @@ export const enviarPregunta = async (pregunta: string): Promise<string> => {
     });
 
     const data = await response.json();
-    return data.respuesta; // lo que devuelve tu Code Node en n8n
+    return data.respuesta;
   } catch (error) {
     console.error('Error al enviar la pregunta al chat:', error);
     return 'Hubo un error, inténtalo de nuevo.';

@@ -1,5 +1,5 @@
+import { Brain, Sparkles, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Zap, Brain, Sparkles } from "lucide-react";
 
 const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const [progress, setProgress] = useState(0);
@@ -48,7 +48,7 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
           </div>
         </div>
 
-        <h1 className="text-4xl font-bold text-gradient mb-2">AI Platform</h1>
+        <h1 className="text-4xl font-bold text-gradient mb-2">CISTCOR AI</h1>
         <p className="text-muted-foreground mb-8">Soluciones Inteligentes</p>
 
         <p className="text-lg text-foreground mb-6 min-h-[28px] animate-fade-in-up">

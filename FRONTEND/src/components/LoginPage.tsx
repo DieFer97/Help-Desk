@@ -1,11 +1,11 @@
-import { useState } from "react";
+import heroImage from "@/assets/hero-ai.jpg";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, Users, Shield, Mail, Lock, User } from "lucide-react";
-import heroImage from "@/assets/hero-ai.jpg";
+import { Brain, Lock, Mail, Shield, User, Users } from "lucide-react";
+import { useState } from "react";
 
 interface LoginPageProps {
   onLogin: (userType: 'user' | 'admin') => void;
@@ -37,13 +37,13 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
           <div className="animate-fade-in-up">
             <Brain className="h-12 w-12 text-primary mb-6" />
             <h1 className="text-5xl font-bold mb-4 text-gradient">
-              AI Platform
+              CISTCOR AI
             </h1>
             <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-              Revoluciona tu negocio con inteligencia artificial avanzada. 
+              Revoluciona tu negocio con inteligencia artificial avanzada.
               Chat inteligente y gestión empresarial en una sola plataforma.
             </p>
-            
+
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
@@ -66,7 +66,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
         <div className="w-full max-w-md animate-slide-in-right">
           <div className="text-center mb-8 lg:hidden">
             <Brain className="h-12 w-12 text-primary mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-gradient">AI Platform</h1>
+            <h1 className="text-3xl font-bold text-gradient">CISTCOR AI</h1>
             <p className="text-muted-foreground">Soluciones Inteligentes</p>
           </div>
 
