@@ -15,7 +15,7 @@ interface N8nResponse {
 async function llamarFlujoIA(message: string): Promise<string> {
   try {
     const response = await fetch(
-      "http://localhost:5678/webhook/ia-soporte-facturacion",
+      "http://localhost:5678/webhook/ia-soporte-{endpoint}",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

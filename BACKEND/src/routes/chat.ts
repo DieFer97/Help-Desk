@@ -11,7 +11,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: "Falta el campo 'message'" });
     }
 
-    const webhookUrl = 'http://localhost:5678/webhook/ia-soporte-facturacion';
+    const webhookUrl = 'http://localhost:5678/webhook/ia-soporte-{endpoint}';
 
     const response = await axios.post(webhookUrl, { question: message });
 
