@@ -12,6 +12,7 @@ model User {
   email        String   @unique
   nombre       String
   passwordHash String
+  tipo_usuario String   @default("cliente")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   tickets      Ticket[]
@@ -24,24 +25,35 @@ model Ticket {
   clienteNombre String
   userId        Int
   user          User     @relation(fields: [userId], references: [id])
+  asignadoA     Int?
   fecha         DateTime @default(now())
   asunto        String
   detalle       String
   imagenUrl     String?
   estado        String   @default("pendiente")
+  prioridad     String   @default("normal")
   adminNota     String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
 
 model Chat {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   userId      Int
-  user        User     @relation(fields: [userId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
   title       String
   lastMessage String?
-  timestamp   DateTime @default(now())
-  messages    Json[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  timestamp   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  messages    Message[]
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  chatId    Int
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  content   String
+  imageUrl  String?
+  timestamp DateTime @default(now())
 }
