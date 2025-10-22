@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { useEffect } from "react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -10,6 +11,9 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import axios from "axios"
 import { Bot, ImageIcon, LogOut, Plus, Send, Settings, User, X } from "lucide-react"
 import { useRef, useState } from "react"
+
+import { useAuth } from "../contexts/AuthContext"
+import { useChats } from "../hooks/useChats"
 
 interface Message {
   id: string
@@ -32,41 +36,22 @@ interface ChatInterfaceProps {
 }
 
 const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
+  interface AuthUser {
+    id: string;
+    name: string;
+    // add other properties as needed
+  }
+  const { user, token } = useAuth()
+  const { chats, isLoading: chatsLoading, loadChats, createChat, setChats } = useChats()
   const [currentInput, setCurrentInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [activeChat, setActiveChat] = useState<string>("1")
+  const [activeChat, setActiveChat] = useState<string>("")
   const [selectedImage, setSelectedImage] = useState<{ file: File; url: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [chats, setChats] = useState<Chat[]>([
-    {
-      id: "1",
-      title: "Consulta sobre facturación",
-      lastMessage: "¿Cómo puedo cambiar mi método de pago?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30),
-      messages: [
-        {
-          id: "1",
-          content: "¿Cómo puedo cambiar mi método de pago?",
-          sender: "user",
-          timestamp: new Date(Date.now() - 1000 * 60 * 30),
-        },
-        {
-          id: "2",
-          content:
-            "Te ayudo con el cambio de método de pago. Puedes acceder a Configuración > Facturación y seleccionar 'Cambiar método de pago'. ¿Necesitas ayuda con algún paso específico?",
-          sender: "ai",
-          timestamp: new Date(Date.now() - 1000 * 60 * 29),
-        },
-      ],
-    },
-    {
-      id: "2",
-      title: "Integración API",
-      lastMessage: "Explícame los endpoints disponibles",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-      messages: [],
-    },
-  ])
+
+  useEffect(() => {
+    loadChats()
+  }, [loadChats])
 
   const currentChat = chats.find((chat) => chat.id === activeChat)
 
@@ -96,7 +81,7 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
     }
   }
 
-  const sendMessage = async () => {
+  const sendUserMessage = async () => {
     if ((!currentInput.trim() && !selectedImage) || isLoading) return
 
     const userMessage: Message = {
@@ -365,7 +350,7 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
               placeholder="Escribe tu mensaje..."
               value={currentInput}
               onChange={(e) => setCurrentInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+              onKeyDown={(e) => e.key === "Enter" && sendUserMessage()}
               disabled={isLoading}
             />
             <Button size="icon" variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={isLoading}>
@@ -379,7 +364,7 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
               aria-label="Subir imagen"
               onChange={handleImageUpload}
             />
-            <Button onClick={sendMessage} disabled={isLoading || (!currentInput.trim() && !selectedImage)}>
+            <Button onClick={sendUserMessage} disabled={isLoading || (!currentInput.trim() && !selectedImage)}>
               <Send className="h-4 w-4" />
             </Button>
           </div>

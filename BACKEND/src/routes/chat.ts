@@ -1,27 +1,57 @@
-import axios from 'axios';
-import { Router } from 'express';
+import { Router, type NextFunction, type Request, type Response } from "express"
+import type { AuthRequest } from "../middleware/auth"
+import { validateRequest } from "../middleware/validation"
+import { chatService } from "../services/chat.service"
+import { createChatSchema, createMessageSchema } from "../utils/schemas"
 
-const router = Router();
+const router = Router()
 
-router.post('/', async (req, res) => {
-  try {
-    const { message } = req.body;
+const asyncHandler = (fn: Function) => (req: Request, res: Response, next: NextFunction) => {
+  Promise.resolve(fn(req, res, next)).catch(next)
+}
 
-    if (!message) {
-      return res.status(400).json({ error: "Falta el campo 'message'" });
-    }
+router.post(
+  "/",
+  validateRequest(createChatSchema),
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { title } = req.body
+    const chat = await chatService.createChat(Number(req.userId!), title)
+    res.status(201).json(chat)
+  }),
+)
 
-    const webhookUrl = 'http://localhost:5678/webhook/cistbot-webhook';
+router.get(
+  "/",
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    const chats = await chatService.getUserChats(Number(req.userId!))
+    res.json(chats)
+  }),
+)
 
-    const response = await axios.post(webhookUrl, { question: message });
+router.get(
+  "/:id",
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    const chat = await chatService.getChat(Number(req.params.id), Number(req.userId!))
+    res.json(chat)
+  }),
+)
 
-    const aiRespuesta = response.data.respuesta || "No se obtuvo respuesta del agente.";
+router.post(
+  "/:id/messages",
+  validateRequest(createMessageSchema),
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { content, imageUrl } = req.body
+    const result = await chatService.addMessage(Number(req.params.id), Number(req.userId!), content, imageUrl)
+    res.status(201).json(result)
+  }),
+)
 
-    res.json({ respuesta: aiRespuesta });
-  } catch (error: any) {
-    console.error(error.message);
-    res.status(500).json({ error: "Error al comunicarse con la IA" });
-  }
-});
+router.delete(
+  "/:id",
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    const result = await chatService.deleteChat(Number(req.params.id), Number(req.userId!))
+    res.json(result)
+  }),
+)
 
-export default router;
+export default router

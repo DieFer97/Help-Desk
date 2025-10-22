@@ -1,39 +1,50 @@
-import { useState, useEffect } from "react";
-import LoadingScreen from "@/components/LoadingScreen";
-import LoginPage from "@/components/LoginPage";
-import ChatInterface from "@/components/ChatInterface";
-import AdminDashboard from "@/components/AdminDashboard";
+import AdminDashboard from "@/components/AdminDashboard"
+import ChatInterface from "@/components/ChatInterface"
+import LoadingScreen from "@/components/LoadingScreen"
+import { useAuth } from "@/contexts/AuthContext"
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<'loading' | 'login' | 'chat' | 'admin'>('loading');
-  const [userType, setUserType] = useState<'user' | 'admin' | null>(null);
+  const [showLoading, setShowLoading] = useState(true)
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const hasSeenLoading = sessionStorage.getItem("hasSeenLoading")
+    
+    if (hasSeenLoading) {
+      setShowLoading(false)
+    }
+  }, [])
 
   const handleLoadingComplete = () => {
-    setCurrentView('login');
-  };
-
-  const handleLogin = (type: 'user' | 'admin') => {
-    setUserType(type);
-    setCurrentView(type === 'user' ? 'chat' : 'admin');
-  };
+    sessionStorage.setItem("hasSeenLoading", "true")
+    setShowLoading(false)
+  }
 
   const handleLogout = () => {
-    setUserType(null);
-    setCurrentView('login');
-  };
-
-  switch (currentView) {
-    case 'loading':
-      return <LoadingScreen onComplete={handleLoadingComplete} />;
-    case 'login':
-      return <LoginPage onLogin={handleLogin} />;
-    case 'chat':
-      return <ChatInterface onLogout={handleLogout} />;
-    case 'admin':
-      return <AdminDashboard onLogout={handleLogout} />;
-    default:
-      return <LoadingScreen onComplete={handleLoadingComplete} />;
+    logout()
+    sessionStorage.removeItem("hasSeenLoading")
+    navigate("/login")
   }
-};
 
-export default Index;
+  if (showLoading) {
+    return <LoadingScreen onComplete={handleLoadingComplete} />
+  }
+
+  if (!user) {
+    navigate("/login")
+    return null
+  }
+
+  const isAdmin = user.tipo_usuario === "admin"
+
+  if (isAdmin) {
+    return <AdminDashboard onLogout={handleLogout} />
+  }
+
+  return <ChatInterface onLogout={handleLogout} />
+}
+
+export default Index
