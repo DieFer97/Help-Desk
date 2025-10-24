@@ -19,6 +19,18 @@ export interface Chat {
   messages: Message[]
 }
 
+// ✅ INTERFAZ: Sugerencia de ticket
+export interface TicketSuggestion {
+  ticketNumber: string
+  clientName: string
+  clientEmail: string
+  subject: string
+  detail: string
+  imageUrl: string | null
+  chatId: string
+  userId: number
+}
+
 interface ApiChat {
   id: number
   userId: number
@@ -37,6 +49,14 @@ interface ApiMessage {
   sender: "user" | "ai"
   imageUrl: string | null
   timestamp: string
+}
+
+// ✅ INTERFAZ: Respuesta con posible ticket
+interface MessageResponse {
+  userMessage: ApiMessage
+  aiMessage: ApiMessage
+  requiresTicket?: boolean
+  ticketSuggestion?: TicketSuggestion
 }
 
 export const useChats = () => {
@@ -198,6 +218,28 @@ export const useChats = () => {
     async (chatId: string, content: string, imageFile?: File) => {
       if (!token) throw new Error("No hay token de autenticación")
 
+      const tempUserMessageId = `temp-user-${Date.now()}`
+      const tempUserMessage: Message = {
+        id: tempUserMessageId,
+        content,
+        sender: "user",
+        timestamp: new Date(),
+        imageUrl: imageFile ? URL.createObjectURL(imageFile) : undefined,
+      }
+
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === chatId
+            ? {
+                ...chat,
+                messages: [...chat.messages, tempUserMessage],
+                lastMessage: content,
+                timestamp: new Date(),
+              }
+            : chat,
+        ),
+      )
+
       try {
         let imageUrl: string | undefined
 
@@ -228,7 +270,8 @@ export const useChats = () => {
 
         if (!response.ok) throw new Error("Error al enviar mensaje")
 
-        const { userMessage, aiMessage } = await response.json()
+        const data: MessageResponse = await response.json()
+        const { userMessage, aiMessage, requiresTicket, ticketSuggestion } = data
 
         const currentChat = chats.find((chat) => chat.id === chatId)
         if (currentChat && currentChat.title === "Cargando...") {
@@ -236,40 +279,114 @@ export const useChats = () => {
         }
 
         setChats((prev) =>
+          prev.map((chat) => {
+            if (chat.id !== chatId) return chat
+
+            const messagesWithoutTemp = chat.messages.filter((msg) => msg.id !== tempUserMessageId)
+
+            return {
+              ...chat,
+              title: currentChat?.title === "Cargando..." ? content : chat.title,
+              lastMessage: aiMessage.content,
+              timestamp: new Date(aiMessage.timestamp),
+              messages: [
+                ...messagesWithoutTemp,
+                {
+                  id: userMessage.id.toString(),
+                  content: userMessage.content,
+                  sender: userMessage.sender as "user" | "ai",
+                  timestamp: new Date(userMessage.timestamp),
+                  imageUrl: userMessage.imageUrl || undefined,
+                },
+                {
+                  id: aiMessage.id.toString(),
+                  content: aiMessage.content,
+                  sender: aiMessage.sender as "user" | "ai",
+                  timestamp: new Date(aiMessage.timestamp),
+                },
+              ],
+            }
+          }),
+        )
+
+        // ✅ RETORNAR: Incluir requiresTicket y ticketSuggestion
+        return { 
+          success: true, 
+          requiresTicket: requiresTicket || false,
+          ticketSuggestion: ticketSuggestion || null 
+        }
+      } catch (error) {
+        console.error("Error sending message:", error)
+        
+        setChats((prev) =>
           prev.map((chat) =>
             chat.id === chatId
               ? {
                   ...chat,
-                  lastMessage: aiMessage.content,
-                  timestamp: new Date(aiMessage.timestamp),
-                  messages: [
-                    ...chat.messages,
-                    {
-                      id: userMessage.id.toString(),
-                      content: userMessage.content,
-                      sender: userMessage.sender as "user" | "ai",
-                      timestamp: new Date(userMessage.timestamp),
-                      imageUrl: userMessage.imageUrl || undefined,
-                    },
-                    {
-                      id: aiMessage.id.toString(),
-                      content: aiMessage.content,
-                      sender: aiMessage.sender as "user" | "ai",
-                      timestamp: new Date(aiMessage.timestamp),
-                    },
-                  ],
+                  messages: chat.messages.filter((msg) => msg.id !== tempUserMessageId),
                 }
               : chat,
           ),
         )
-
-        return { success: true }
-      } catch (error) {
-        console.error("Error sending message:", error)
+        
         throw error
       }
     },
     [token, chats, updateChatTitle],
+  )
+
+  // ✅ FUNCIÓN: Confirmar creación de ticket
+  const confirmTicket = useCallback(
+    async (ticketNumber: string) => {
+      if (!token) throw new Error("No hay token de autenticación")
+
+      try {
+        const response = await fetch("http://localhost:3000/api/tickets/confirm", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ticketNumber }),
+        })
+
+        if (!response.ok) throw new Error("Error al confirmar ticket")
+
+        const result = await response.json()
+        return result
+      } catch (error) {
+        console.error("Error confirming ticket:", error)
+        throw error
+      }
+    },
+    [token],
+  )
+
+  // ✅ FUNCIÓN: Cancelar creación de ticket
+  const cancelTicket = useCallback(
+    async (ticketNumber: string) => {
+      if (!token) throw new Error("No hay token de autenticación")
+
+      try {
+        const response = await fetch("http://localhost:3000/api/tickets/cancel", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ticketNumber }),
+        })
+
+        if (!response.ok) throw new Error("Error al cancelar ticket")
+
+        const result = await response.json()
+        return result
+      } catch (error) {
+        console.error("Error canceling ticket:", error)
+        throw error
+      }
+    },
+    [token],
   )
 
   const deleteChat = useCallback(
@@ -306,6 +423,8 @@ export const useChats = () => {
     loadChatMessages,
     createChat,
     sendMessage,
+    confirmTicket,
+    cancelTicket,
     deleteChat,
     setChats,
     updateChatTitle,

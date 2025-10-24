@@ -3,16 +3,26 @@
 import type React from "react"
 import { useEffect } from "react"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Bot, ImageIcon, LogOut, Plus, Send, Settings, Trash2, User, X } from "lucide-react"
+import { Bot, ImageIcon, LogOut, Plus, Send, Settings, Ticket, Trash2, User, X } from "lucide-react"
 import { useRef, useState } from "react"
 
 import { useAuth } from "../contexts/AuthContext"
-import { useChats } from "../hooks/useChats"
+import { useChats, type TicketSuggestion } from "../hooks/useChats"
 
 interface Message {
   id: string
@@ -43,6 +53,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
     loadChatMessages,
     createChat,
     sendMessage,
+    confirmTicket,
+    cancelTicket,
     deleteChat,
     setChats,
   } = useChats()
@@ -53,6 +65,11 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [hoveredChat, setHoveredChat] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // ✅ Estado para el diálogo de ticket
+  const [showTicketDialog, setShowTicketDialog] = useState(false)
+  const [pendingTicket, setPendingTicket] = useState<TicketSuggestion | null>(null)
+  const [isCreatingTicket, setIsCreatingTicket] = useState(false)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -112,13 +129,56 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
     clearSelectedImage()
 
     try {
-      await sendMessage(activeChat, tempInput, tempImage)
+      const result = await sendMessage(activeChat, tempInput, tempImage)
+      
+      // ✅ Si hay sugerencia de ticket, mostrar diálogo
+      if (result.requiresTicket && result.ticketSuggestion) {
+        setPendingTicket(result.ticketSuggestion)
+        setShowTicketDialog(true)
+      }
     } catch (err) {
       console.error("Error al enviar mensaje:", err)
       alert("No se pudo enviar el mensaje. Intenta de nuevo.")
       setCurrentInput(tempInput)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // ✅ Confirmar creación de ticket
+  const handleConfirmTicket = async () => {
+    if (!pendingTicket) return
+
+    setIsCreatingTicket(true)
+    try {
+      await confirmTicket(pendingTicket.ticketNumber)
+      alert(`✅ Ticket ${pendingTicket.ticketNumber} creado exitosamente. El administrador ha sido notificado.`)
+      setShowTicketDialog(false)
+      setPendingTicket(null)
+    } catch (error) {
+      console.error("Error al crear ticket:", error)
+      alert("❌ No se pudo crear el ticket. Intenta de nuevo.")
+    } finally {
+      setIsCreatingTicket(false)
+    }
+  }
+
+  // ✅ Cancelar creación de ticket
+  const handleCancelTicket = async () => {
+    if (!pendingTicket) {
+      setShowTicketDialog(false)
+      return
+    }
+
+    try {
+      await cancelTicket(pendingTicket.ticketNumber)
+      setShowTicketDialog(false)
+      setPendingTicket(null)
+    } catch (error) {
+      console.error("Error al cancelar ticket:", error)
+      // Silencioso, solo cerramos el diálogo
+      setShowTicketDialog(false)
+      setPendingTicket(null)
     }
   }
 
@@ -171,6 +231,54 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
 
   return (
     <div className="h-screen flex bg-gradient-background">
+      {/* ✅ Diálogo de Confirmación de Ticket */}
+      <AlertDialog open={showTicketDialog} onOpenChange={setShowTicketDialog}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Ticket className="h-5 w-5 text-primary" />
+              ¿Desea crear un ticket?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-2">
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between items-start">
+                  <span className="text-sm font-medium text-foreground">Número de Ticket:</span>
+                  <span className="text-sm font-bold text-primary">{pendingTicket?.ticketNumber}</span>
+                </div>
+                <div className="flex justify-between items-start">
+                  <span className="text-sm font-medium text-foreground">Cliente:</span>
+                  <span className="text-sm text-foreground">{pendingTicket?.clientName}</span>
+                </div>
+                <div className="border-t pt-2 mt-2">
+                  <span className="text-sm font-medium text-foreground block mb-1">Asunto:</span>
+                  <p className="text-sm text-muted-foreground line-clamp-3">
+                    {pendingTicket?.subject}
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-center text-muted-foreground">
+                Se creará un ticket de soporte y el administrador será notificado por WhatsApp
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={handleCancelTicket}
+              disabled={isCreatingTicket}
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmTicket}
+              disabled={isCreatingTicket}
+              className="bg-primary hover:bg-primary/90"
+            >
+              {isCreatingTicket ? "Creando..." : "Aceptar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* SIDEBAR */}
       <div className="w-80 border-r border-border/50 flex flex-col bg-card/30 backdrop-blur-sm">
         <div className="p-4 border-b border-border/50">
