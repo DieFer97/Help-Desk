@@ -36,6 +36,14 @@ router.get(
   }),
 )
 
+router.get(
+  "/:id/messages",
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    const messages = await chatService.getMessagesByChatId(Number(req.params.id), Number(req.userId!))
+    res.json(messages)
+  }),
+)
+
 router.post(
   "/:id/messages",
   validateRequest(createMessageSchema),
@@ -43,6 +51,15 @@ router.post(
     const { content, imageUrl } = req.body
     const result = await chatService.addMessage(Number(req.params.id), Number(req.userId!), content, imageUrl)
     res.status(201).json(result)
+  }),
+)
+
+router.put(
+  "/:id",
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { title } = req.body
+    const result = await chatService.updateChatTitle(Number(req.params.id), Number(req.userId!), title)
+    res.json(result)
   }),
 )
 

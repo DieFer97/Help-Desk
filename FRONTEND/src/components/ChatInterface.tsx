@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import axios from "axios"
-import { Bot, ImageIcon, LogOut, Plus, Send, Settings, User, X } from "lucide-react"
+import { Bot, ImageIcon, LogOut, Plus, Send, Settings, Trash2, User, X } from "lucide-react"
 import { useRef, useState } from "react"
 
 import { useAuth } from "../contexts/AuthContext"
@@ -36,22 +35,41 @@ interface ChatInterfaceProps {
 }
 
 const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
-  interface AuthUser {
-    id: string;
-    name: string;
-    // add other properties as needed
-  }
   const { user, token } = useAuth()
-  const { chats, isLoading: chatsLoading, loadChats, createChat, setChats } = useChats()
+  const {
+    chats,
+    isLoading: chatsLoading,
+    loadChats,
+    loadChatMessages,
+    createChat,
+    sendMessage,
+    deleteChat,
+    setChats,
+  } = useChats()
   const [currentInput, setCurrentInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [activeChat, setActiveChat] = useState<string>("")
   const [selectedImage, setSelectedImage] = useState<{ file: File; url: string } | null>(null)
+  const [currentTime, setCurrentTime] = useState(new Date())
+  const [hoveredChat, setHoveredChat] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     loadChats()
   }, [loadChats])
+
+  useEffect(() => {
+    if (activeChat && token) {
+      loadChatMessages(activeChat)
+    }
+  }, [activeChat, token, loadChatMessages])
 
   const currentChat = chats.find((chat) => chat.id === activeChat)
 
@@ -82,128 +100,78 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
   }
 
   const sendUserMessage = async () => {
-    if ((!currentInput.trim() && !selectedImage) || isLoading) return
+    if ((!currentInput.trim() && !selectedImage) || isLoading || !activeChat) return
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: currentInput || (selectedImage ? "Analiza esta imagen." : ""),
-      sender: "user",
-      timestamp: new Date(),
-      imageUrl: selectedImage?.url,
-    }
-
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === activeChat
-          ? {
-              ...chat,
-              messages: [...chat.messages, userMessage],
-              lastMessage: userMessage.content,
-              timestamp: userMessage.timestamp,
-            }
-          : chat,
-      ),
-    )
-    setCurrentInput("")
     setIsLoading(true)
+    const messageContent = currentInput || (selectedImage ? "Analiza esta imagen." : "")
+
+    const tempInput = messageContent
+    const tempImage = selectedImage?.file
+
+    setCurrentInput("")
+    clearSelectedImage()
 
     try {
-      const webhookUrl = "http://localhost:5678/webhook/cistbot-webhook"
-      let response
-
-      if (selectedImage) {
-        const formData = new FormData()
-        formData.append("message", currentInput || "Analiza esta imagen.")
-        formData.append("image", selectedImage.file)
-        formData.append("userId", "2")
-        formData.append("clienteNombre", "Juan Pérez")
-        response = await axios.post(webhookUrl, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        })
-      } else {
-        response = await axios.post(
-          webhookUrl,
-          {
-            message: userMessage.content,
-            userId: "2",
-            clienteNombre: "Juan Pérez",
-          },
-          { headers: { "Content-Type": "application/json" } },
-        )
-      }
-
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: response.data.respuesta || "No se recibió respuesta válida.",
-        sender: "ai",
-        timestamp: new Date(),
-      }
-
-      setChats((prev) =>
-        prev.map((chat) =>
-          chat.id === activeChat
-            ? {
-                ...chat,
-                messages: [...chat.messages, aiMessage],
-                lastMessage: aiMessage.content,
-                timestamp: aiMessage.timestamp,
-              }
-            : chat,
-        ),
-      )
+      await sendMessage(activeChat, tempInput, tempImage)
     } catch (err) {
       console.error("Error al enviar mensaje:", err)
-      const errorMessage: Message = {
-        id: (Date.now() + 2).toString(),
-        content: selectedImage
-          ? "No pude procesar la imagen en este momento."
-          : "No pude generar una respuesta en este momento.",
-        sender: "ai",
-        timestamp: new Date(),
-      }
-      setChats((prev) =>
-        prev.map((chat) =>
-          chat.id === activeChat
-            ? {
-                ...chat,
-                messages: [...chat.messages, errorMessage],
-                lastMessage: errorMessage.content,
-                timestamp: errorMessage.timestamp,
-              }
-            : chat,
-        ),
-      )
+      alert("No se pudo enviar el mensaje. Intenta de nuevo.")
+      setCurrentInput(tempInput)
     } finally {
       setIsLoading(false)
-      clearSelectedImage()
     }
   }
 
-  const createNewChat = () => {
-    const newChat: Chat = {
-      id: Date.now().toString(),
-      title: "Nueva consulta",
-      lastMessage: "",
-      timestamp: new Date(),
-      messages: [],
+  const createNewChat = async () => {
+    try {
+      const newChat = await createChat("Cargando...")
+      setActiveChat(newChat.id)
+    } catch (error) {
+      console.error("Error al crear chat:", error)
+      alert("No se pudo crear el chat. Intenta de nuevo.")
     }
-    setChats((prev) => [newChat, ...prev])
-    setActiveChat(newChat.id)
   }
 
-  const handleOpenTicket = () => {
-    alert("Funcionalidad 'Abrir ticket' en desarrollo. Pronto podrás crear un ticket desde aquí.")
+  const handleDeleteChat = async (chatId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+
+    if (!confirm("¿Estás seguro de eliminar este chat?")) return
+
+    try {
+      await deleteChat(chatId)
+      if (activeChat === chatId) {
+        setActiveChat("")
+      }
+    } catch (error) {
+      console.error("Error al eliminar chat:", error)
+      alert("No se pudo eliminar el chat. Intenta de nuevo.")
+    }
   }
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("es-ES", {
+    return date.toLocaleTimeString("es-PE", {
       hour: "2-digit",
       minute: "2-digit",
     })
   }
 
+  const formatDateTime = (date: Date) => {
+    return date.toLocaleString("es-PE", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      timeZone: "America/Lima",
+      hour12: false,
+    })
+  }
+
   return (
     <div className="h-screen flex bg-gradient-background">
+      {/* SIDEBAR */}
       <div className="w-80 border-r border-border/50 flex flex-col bg-card/30 backdrop-blur-sm">
         <div className="p-4 border-b border-border/50">
           <div className="flex items-center justify-between mb-4">
@@ -222,41 +190,61 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
             Nueva Consulta
           </Button>
         </div>
-        <ScrollArea className="flex-1 px-4">
-          <div className="space-y-2 py-4">
+
+        <ScrollArea className="flex-1">
+          <div className="px-4 py-4 space-y-4">
             {chats.map((chat) => (
               <Card
                 key={chat.id}
-                className={`cursor-pointer transition-all hover:bg-muted/50 ${
-                  activeChat === chat.id ? "border-primary/50 bg-primary/5" : "border-border/30"
+                className={`cursor-pointer transition-all hover:shadow-lg border-2 max-w-[18rem] ${
+                  activeChat === chat.id
+                    ? "border-primary bg-primary/15 shadow-md"
+                    : "border-border/40 bg-card/50 hover:bg-card/70 hover:border-border/60"
                 }`}
                 onClick={() => setActiveChat(chat.id)}
+                onMouseEnter={() => setHoveredChat(chat.id)}
+                onMouseLeave={() => setHoveredChat("")}
               >
-                <CardContent className="p-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium truncate text-sm">{chat.title}</h3>
-                      {chat.lastMessage && (
-                        <p className="text-xs text-muted-foreground truncate mt-1">{chat.lastMessage}</p>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-end ml-2">
-                      <span className="text-xs text-muted-foreground">{formatTime(chat.timestamp)}</span>
-                    </div>
+                <CardContent className="p-4 flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-sm text-foreground truncate">{chat.title}</h3>
+                    <p className="text-xs text-muted-foreground truncate mt-2 line-clamp-2">{chat.lastMessage}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap font-medium">
+                      {formatTime(chat.timestamp)}
+                    </span>
+
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 transition-all hover:bg-destructive hover:text-destructive-foreground"
+                      style={{
+                        opacity: hoveredChat === chat.id ? 1 : 0,
+                        pointerEvents: hoveredChat === chat.id ? "auto" : "none",
+                      }}
+                      onClick={(e) => handleDeleteChat(chat.id, e)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         </ScrollArea>
+
         <div className="p-4 border-t border-border/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground">U</AvatarFallback>
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  {user?.nombre.charAt(0).toUpperCase() || "U"}
+                </AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-medium">Usuario</p>
+                <p className="text-sm font-medium">{user?.nombre || "Usuario"}</p>
                 <p className="text-xs text-muted-foreground">En línea</p>
               </div>
             </div>
@@ -266,6 +254,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
           </div>
         </div>
       </div>
+
+      {/* CHAT AREA */}
       <div className="flex-1 flex flex-col">
         <div className="p-4 border-b border-border/50 bg-card/30 backdrop-blur-sm flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -279,15 +269,12 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
               <p className="text-sm text-muted-foreground">Asistente IA • Siempre disponible</p>
             </div>
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleOpenTicket}
-            className="ml-auto bg-gradient-primary text-white font-sans font-bold text-lg tracking-wide rounded-lg px-6 py-2 shadow-md hover:shadow-lg transition-all duration-200 bg-[length:100%_100%]"
-          >
-            Abrir ticket
-          </Button>
+          <div className="text-right">
+            <p className="text-sm font-medium capitalize">{formatDateTime(currentTime)}</p>
+            <p className="text-xs text-muted-foreground">Huánuco, Perú</p>
+          </div>
         </div>
+
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-4">
             {currentChat?.messages.map((message) => (
@@ -327,6 +314,7 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
             ))}
           </div>
         </ScrollArea>
+
         <div className="p-4 border-t border-border/50 flex flex-col space-y-2">
           {selectedImage && (
             <div className="flex items-center space-x-2">

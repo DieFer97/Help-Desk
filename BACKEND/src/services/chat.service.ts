@@ -24,17 +24,21 @@ export const chatService = {
   async getUserChats(userId: number) {
     const chats = await prisma.chat.findMany({
       where: { userId },
-      orderBy: { id: "desc" },
-      include: { messages: { take: 1, orderBy: { id: "desc" } } },
+      orderBy: { timestamp: "desc" },
+      include: {
+        messages: {
+          take: 10,
+          orderBy: { timestamp: "asc" },
+        },
+      },
     })
-
     return chats
   },
 
   async getChat(chatId: number, userId: number) {
     const chat = await prisma.chat.findUnique({
       where: { id: chatId },
-      include: { messages: { orderBy: { id: "asc" } } },
+      include: { messages: { orderBy: { timestamp: "asc" } } },
     })
 
     if (!chat || chat.userId !== userId) {
@@ -44,22 +48,39 @@ export const chatService = {
     return chat
   },
 
+  async getMessagesByChatId(chatId: number, userId: number) {
+    const chat = await prisma.chat.findUnique({
+      where: { id: chatId },
+      select: { userId: true },
+    })
+
+    if (!chat || chat.userId !== userId) {
+      throw new AppError(404, "Chat no encontrado o sin acceso")
+    }
+
+    const messages = await prisma.message.findMany({
+      where: { chatId },
+      orderBy: { timestamp: "asc" },
+    })
+
+    return messages
+  },
+
   async addMessage(chatId: number, userId: number, content: string, imageUrl?: string) {
     const chat = await prisma.chat.findUnique({ where: { id: chatId } })
     if (!chat || chat.userId !== userId) {
       throw new AppError(404, "Chat no encontrado")
     }
 
-    // Save user message
     const userMessage = await prisma.message.create({
       data: {
         chatId,
         content,
+        sender: "user",
         imageUrl,
       },
     })
 
-    // Call N8n webhook
     try {
       const response = await axios.post(env.N8N_WEBHOOK_URL, {
         message: content,
@@ -69,18 +90,20 @@ export const chatService = {
         clienteNombre: chat.title,
       })
 
-      // Save AI response
       const aiMessage = await prisma.message.create({
         data: {
           chatId,
-          content: response.data.response || "No se pudo procesar la solicitud",
+          content: response.data.respuesta || "No se pudo procesar la solicitud",
+          sender: "ai",
         },
       })
 
-      // Update chat lastMessage
       await prisma.chat.update({
         where: { id: chatId },
-        data: { lastMessage: content },
+        data: {
+          lastMessage: aiMessage.content,
+          timestamp: new Date(),
+        },
       })
 
       logger.info(`Mensaje procesado en chat ${chatId}`)
@@ -91,15 +114,28 @@ export const chatService = {
     }
   },
 
+  async updateChatTitle(chatId: number, userId: number, title: string) {
+    const chat = await prisma.chat.findUnique({ where: { id: chatId } })
+    if (!chat || chat.userId !== userId) {
+      throw new AppError(404, "Chat no encontrado")
+    }
+
+    const updatedChat = await prisma.chat.update({
+      where: { id: chatId },
+      data: { title },
+    })
+
+    logger.info(`Título del chat ${chatId} actualizado a: ${title}`)
+    return updatedChat
+  },
+
   async deleteChat(chatId: number, userId: number) {
     const chat = await prisma.chat.findUnique({ where: { id: chatId } })
     if (!chat || chat.userId !== userId) {
       throw new AppError(404, "Chat no encontrado")
     }
 
-    await prisma.message.deleteMany({ where: { chatId } })
     await prisma.chat.delete({ where: { id: chatId } })
-
     logger.info(`Chat eliminado: ${chatId}`)
     return { success: true }
   },

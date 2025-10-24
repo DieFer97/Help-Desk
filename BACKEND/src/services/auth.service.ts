@@ -10,13 +10,11 @@ const env = getEnv()
 
 export const authService = {
   async register(email: string, password: string, nombre: string) {
-    // Check if user exists
     const existingUser = await prisma.user.findUnique({ where: { email } })
     if (existingUser) {
       throw new AppError(400, "El email ya está registrado")
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
     const user = await prisma.user.create({
@@ -30,7 +28,6 @@ export const authService = {
 
     logger.info(`Usuario registrado: ${email}`)
 
-    // Generate token
     const token = jwt.sign({ userId: user.id, email: user.email, tipo_usuario: user.tipo_usuario }, env.JWT_SECRET, {
       expiresIn: "7d",
     })
@@ -40,7 +37,7 @@ export const authService = {
         id: user.id, 
         email: user.email, 
         nombre: user.nombre, 
-        tipo_usuario: user.tipo_usuario  // ⭐ AGREGADO
+        tipo_usuario: user.tipo_usuario
       }, 
       token 
     }
@@ -68,7 +65,7 @@ export const authService = {
         id: user.id, 
         email: user.email, 
         nombre: user.nombre, 
-        tipo_usuario: user.tipo_usuario  // ⭐ AGREGADO
+        tipo_usuario: user.tipo_usuario
       }, 
       token 
     }
