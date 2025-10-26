@@ -53,6 +53,31 @@ router.get(
 )
 
 router.get(
+  "/recent-queries",
+  asyncHandler(async (_req: Request, res: Response) => {
+    const recentChats = await prisma.chat.findMany({
+      take: 10,
+      orderBy: { timestamp: "desc" },
+      include: {
+        user: {
+          select: { nombre: true, email: true },
+        },
+      },
+    })
+
+    const queries = recentChats.map((chat) => ({
+      id: chat.id,
+      content: chat.lastMessage || chat.title,
+      timestamp: chat.timestamp,
+      userName: chat.user.nombre,
+      userEmail: chat.user.email,
+    }))
+
+    res.status(200).json(queries)
+  }),
+)
+
+router.get(
   "/stats",
   asyncHandler(async (_req: Request, res: Response) => {
     const totalUsers = await prisma.user.count();

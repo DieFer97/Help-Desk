@@ -61,6 +61,14 @@ interface CategoryData {
   color: string;
 }
 
+interface RecentQuery {
+  id: number;
+  content: string;
+  timestamp: string;
+  userName: string;
+  userEmail: string;
+}
+
 interface AdminDashboardProps {
   onLogout: () => void;
 }
@@ -80,6 +88,7 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   }>({ weekly: [], categories: [] });
 
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [recentQueries, setRecentQueries] = useState<RecentQuery[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
@@ -97,9 +106,10 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
           headers.Authorization = `Bearer ${token}`
         }
 
-        const [ticketsRes, statsRes] = await Promise.all([
+        const [ticketsRes, statsRes, queriesRes] = await Promise.all([
           fetch("/api/tickets", { headers }),
           fetch("/api/tickets/stats", { headers }),
+          fetch("/api/tickets/recent-queries", { headers }),
         ])
 
         if (!ticketsRes.ok || !statsRes.ok) {
@@ -109,8 +119,18 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
         const ticketsData: Ticket[] = await ticketsRes.json()
         const stats = await statsRes.json()
+        
+        let queriesData: RecentQuery[] = []
+        if (queriesRes.ok) {
+          queriesData = await queriesRes.json()
+          console.log("📊 Consultas recientes cargadas:", queriesData.length)
+          console.log("Datos de consultas:", queriesData)
+        } else {
+          console.error("Error cargando consultas:", queriesRes.status)
+        }
 
         setTickets(ticketsData)
+        setRecentQueries(queriesData)
 
         setStats({
           totalUsers: stats.totalUsers || 0,
@@ -187,7 +207,6 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
       if (!res.ok) throw new Error("Error eliminando ticket")
 
-      // Actualizar lista local
       setTickets(tickets.filter(t => t.id !== id))
       setSelectedTicket(null)
     } catch (err) {
@@ -454,34 +473,71 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                 </Card>
               </div>
 
-              <Card className="glass-effect border-border/50">
-                <CardHeader>
-                  <CardTitle>Distribución por Categorías</CardTitle>
-                  <CardDescription>Tipos de consultas más frecuentes</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-center">
-                    <ResponsiveContainer width="100%" height={200}>
-                      <PieChart>
-                        <Pie
-                          data={chartData.categories}
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        >
-                          {chartData.categories.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="glass-effect border-border/50">
+                  <CardHeader>
+                    <CardTitle>Últimas Consultas</CardTitle>
+                    <CardDescription>Mensajes recientes del chatbot</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[350px]">
+                      <div className="space-y-3 pr-4">
+                        {recentQueries.length === 0 ? (
+                          <div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm">
+                            No hay consultas recientes
+                          </div>
+                        ) : (
+                          recentQueries.map((query) => (
+                            <div key={query.id} className="border border-border/50 rounded-lg p-3 space-y-2 bg-card/50 hover:bg-card/70 transition-colors">
+                              <p className="text-xs font-medium text-primary">{query.userName}</p>
+                              <p className="text-sm line-clamp-2 text-foreground">{query.content}</p>
+                              <div className="flex items-center justify-end text-xs text-muted-foreground">
+                                <Clock className="h-3 w-3 mr-1" />
+                                <span>{new Date(query.timestamp).toLocaleDateString("es-ES", {
+                                  day: "2-digit",
+                                  month: "2-digit"
+                                })} {new Date(query.timestamp).toLocaleTimeString("es-ES", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}</span>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+
+                <Card className="glass-effect border-border/50">
+                  <CardHeader>
+                    <CardTitle>Distribución por Categorías</CardTitle>
+                    <CardDescription>Tipos de consultas más frecuentes</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-center h-[350px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={chartData.categories}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={110}
+                            fill="#8884d8"
+                            dataKey="value"
+                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          >
+                            {chartData.categories.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           )}
         </div>
