@@ -11,6 +11,7 @@ const asyncHandler = (fn: Function) => (req: Request, res: Response, next: NextF
   Promise.resolve(fn(req, res, next)).catch(next)
 }
 
+
 router.post(
   "/confirm",
   asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -53,6 +54,7 @@ router.get(
   }),
 )
 
+
 router.get(
   "/stats",
   asyncHandler(async (_req: Request, res: Response) => {
@@ -77,6 +79,8 @@ router.get(
         updatedAt: { gte: today, lt: tomorrow },
       },
     });
+
+    const totalTickets = await prisma.ticket.count();
 
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
@@ -139,11 +143,13 @@ router.get(
       }))
       .filter((c) => c.value > 0);
 
+    // 7. Respuesta final
     res.status(200).json({
       totalUsers,
       totalChats,
       criticalTickets,
       resolvedToday,
+      totalTickets,
       weeklyTickets,
       categories,
     });

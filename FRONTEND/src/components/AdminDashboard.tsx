@@ -30,7 +30,6 @@ import {
   YAxis
 } from 'recharts';
 
-// === TIPOS PERSONALIZADOS ===
 interface Ticket {
   id: number;
   ticketId: string;
@@ -58,16 +57,6 @@ interface CategoryData {
   color: string;
 }
 
-interface CriticalTicket {
-  id: string;
-  user: string;
-  subject: string;
-  priority: 'critical' | 'high';
-  status: 'open' | 'in-progress' | 'resolved';
-  timestamp: string;
-  messages: number;
-}
-
 interface AdminDashboardProps {
   onLogout: () => void;
 }
@@ -77,7 +66,8 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
     totalUsers: 0,
     activeChats: 0,
     criticalTickets: 0,
-    resolvedToday: 0
+    resolvedToday: 0,
+    totalTickets: 0,
   });
 
   const [chartData, setChartData] = useState<{
@@ -85,7 +75,7 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
     categories: CategoryData[];
   }>({ weekly: [], categories: [] });
 
-  const [criticalTickets, setCriticalTickets] = useState<CriticalTicket[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -111,14 +101,17 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
           throw new Error(`HTTP ${ticketsRes.status}: ${errText}`)
         }
 
-        const tickets: Ticket[] = await ticketsRes.json()
+        const ticketsData: Ticket[] = await ticketsRes.json()
         const stats = await statsRes.json()
+
+        setTickets(ticketsData)
 
         setStats({
           totalUsers: stats.totalUsers || 0,
           activeChats: stats.totalChats || 0,
           criticalTickets: stats.criticalTickets || 0,
           resolvedToday: stats.resolvedToday || 0,
+          totalTickets: stats.totalTickets || 0,
         })
 
         const weeklyData: WeeklyData[] = (stats.weeklyTickets || []).map((d: { name: string; tickets: number }) => ({
@@ -130,28 +123,9 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
           weekly: weeklyData,
           categories: stats.categories || [],
         })
-
-        const critical: CriticalTicket[] = tickets
-          .filter((t) => ["alta", "crítica"].includes(t.prioridad) && t.estado !== "resuelto")
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, 5)
-          .map((t) => ({
-            id: t.ticketId,
-            user: t.user?.nombre || t.clienteNombre,
-            subject: t.asunto,
-            priority: t.prioridad === "crítica" ? "critical" : "high",
-            status: t.estado === "pendiente" ? "open" : "in-progress",
-            timestamp: new Date(t.createdAt).toLocaleTimeString("es-ES", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            messages: 3 + Math.floor(Math.random() * 25),
-          }))
-
-        setCriticalTickets(critical)
       } catch (err) {
         console.error("Error cargando dashboard:", err)
-        setStats({ totalUsers: 0, activeChats: 0, criticalTickets: 0, resolvedToday: 0 })
+        setStats({ totalUsers: 0, activeChats: 0, criticalTickets: 0, resolvedToday: 0, totalTickets: 0 })
       } finally {
         setLoading(false)
       }
@@ -256,7 +230,7 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                     <AlertTriangle className="h-4 w-4 text-warning" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-warning">{stats.criticalTickets}</div>
+                    <div className="text-2xl font-bold text-warning">{stats.totalTickets}</div>
                     <p className="text-xs text-muted-foreground">
                       Requieren atención inmediata
                     </p>
@@ -321,19 +295,31 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                   <CardContent>
                     <ScrollArea className="h-80">
                       <div className="space-y-4">
-                        {criticalTickets.map((ticket) => (
+                        {tickets.slice(0, 5).map((ticket) => (
                           <div key={ticket.id} className="border border-border/50 rounded-lg p-3 space-y-2">
                             <div className="flex items-center justify-between">
-                              <Badge variant="outline" className={getStatusColor(ticket.status)}>
-                                {ticket.status}
+                              <Badge variant="outline" className={getStatusColor(
+                                ticket.estado === "pendiente" ? "open" :
+                                ticket.estado === "en_proceso" ? "in-progress" : "resolved"
+                              )}>
+                                {ticket.estado}
+                              </Badge>
+                              <Badge variant="outline" className={getPriorityColor(
+                                ticket.prioridad === "crítica" ? "critical" :
+                                ticket.prioridad === "alta" ? "high" : "medium"
+                              )}>
+                                {ticket.prioridad}
                               </Badge>
                             </div>
-                            <h4 className="font-medium text-sm">{ticket.subject}</h4>
+                            <h4 className="font-medium text-sm">{ticket.asunto}</h4>
                             <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span>{ticket.user}</span>
+                              <span>{ticket.user?.nombre || ticket.clienteNombre}</span>
                               <div className="flex items-center space-x-2">
                                 <Clock className="h-3 w-3" />
-                                <span>{ticket.timestamp}</span>
+                                <span>{new Date(ticket.createdAt).toLocaleTimeString("es-ES", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}</span>
                               </div>
                             </div>
                             <Button size="sm" variant="outline" className="w-full">
