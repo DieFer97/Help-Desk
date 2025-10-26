@@ -214,6 +214,17 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
     }
   };
 
+  const getEstadoBadgeColor = (estado: string) => {
+    const estadoLower = estado.toLowerCase();
+    if (estadoLower === 'resuelto' || estadoLower === 'resolved') {
+      return 'bg-success/10 text-success border-success/20';
+    } else if (estadoLower === 'en_proceso' || estadoLower === 'en proceso') {
+      return 'bg-warning/10 text-warning border-warning/20';
+    } else {
+      return 'bg-destructive/10 text-destructive border-destructive/20';
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-background">
       <Dialog open={!!selectedTicket} onOpenChange={() => setSelectedTicket(null)}>
@@ -412,27 +423,21 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                     <ScrollArea className="h-80">
                       <div className="space-y-4">
                         {tickets.slice(0, 5).map((ticket) => (
-                          <div key={ticket.id} className="border border-border/50 rounded-lg p-3 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Badge variant="outline" className={getStatusColor(
-                                ticket.estado === "pendiente" ? "open" :
-                                ticket.estado === "en_proceso" ? "in-progress" : "resolved"
-                              )}>
+                          <div key={ticket.id} className="border border-border/50 rounded-lg p-3 space-y-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <h4 className="font-medium text-sm flex-1 line-clamp-2 pr-2">{ticket.detalle}</h4>
+                              <Badge variant="outline" className={`${getEstadoBadgeColor(ticket.estado)} shrink-0`}>
                                 {ticket.estado}
                               </Badge>
-                              <Badge variant="outline" className={getPriorityColor(
-                                ticket.prioridad === "crítica" ? "critical" :
-                                ticket.prioridad === "alta" ? "high" : "medium"
-                              )}>
-                                {ticket.prioridad}
-                              </Badge>
                             </div>
-                            <h4 className="font-medium text-sm">{ticket.asunto}</h4>
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span>{ticket.user?.nombre || ticket.clienteNombre}</span>
-                              <div className="flex items-center space-x-2">
-                                <Clock className="h-3 w-3" />
-                                <span>{new Date(ticket.createdAt).toLocaleTimeString("es-ES", {
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs text-muted-foreground">{ticket.user?.nombre || ticket.clienteNombre}</p>
+                              <div className="flex items-center text-xs text-muted-foreground">
+                                <Clock className="h-3 w-3 mr-1" />
+                                <span>{new Date(ticket.createdAt).toLocaleDateString("es-ES", {
+                                  day: "2-digit",
+                                  month: "2-digit"
+                                })} {new Date(ticket.createdAt).toLocaleTimeString("es-ES", {
                                   hour: "2-digit",
                                   minute: "2-digit",
                                 })}</span>
