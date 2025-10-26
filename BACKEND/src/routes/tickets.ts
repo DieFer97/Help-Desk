@@ -11,7 +11,6 @@ const asyncHandler = (fn: Function) => (req: Request, res: Response, next: NextF
   Promise.resolve(fn(req, res, next)).catch(next)
 }
 
-
 router.post(
   "/confirm",
   asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -37,7 +36,6 @@ router.post(
   }),
 )
 
-
 router.get(
   "/",
   asyncHandler(async (_req: Request, res: Response) => {
@@ -53,7 +51,6 @@ router.get(
     res.status(200).json(tickets)
   }),
 )
-
 
 router.get(
   "/stats",
@@ -143,7 +140,6 @@ router.get(
       }))
       .filter((c) => c.value > 0);
 
-    // 7. Respuesta final
     res.status(200).json({
       totalUsers,
       totalChats,
@@ -155,7 +151,6 @@ router.get(
     });
   })
 );
-
 
 router.put(
   "/:id",
@@ -181,6 +176,26 @@ router.put(
     res.status(200).json({
       success: true,
       ticket: updated,
+    })
+  }),
+)
+
+router.delete(
+  "/:id",
+  asyncHandler(async (req: Request, res: Response) => {
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: Number(req.params.id) },
+    })
+
+    if (!ticket) throw new AppError(404, "Ticket no encontrado")
+
+    await prisma.ticket.delete({
+      where: { id: Number(req.params.id) },
+    })
+
+    res.status(200).json({
+      success: true,
+      message: "Ticket eliminado exitosamente",
     })
   }),
 )

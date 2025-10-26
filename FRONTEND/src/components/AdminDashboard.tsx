@@ -2,10 +2,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   AlertTriangle,
   Bell,
+  Check,
   CheckCircle,
   Clock,
   Filter,
@@ -13,6 +15,7 @@ import {
   MessageSquare,
   Settings,
   Shield,
+  Trash2,
   TrendingUp,
   Users
 } from "lucide-react";
@@ -30,6 +33,7 @@ import {
   YAxis
 } from 'recharts';
 
+// === TIPOS PERSONALIZADOS ===
 interface Ticket {
   id: number;
   ticketId: string;
@@ -77,6 +81,8 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -136,6 +142,60 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
     return () => clearInterval(interval)
   }, [])
 
+  const handleUpdateTicket = async (id: number, estado: string) => {
+    try {
+      const token = localStorage.getItem("token") || ""
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      }
+      if (token) {
+        headers.Authorization = `Bearer ${token}`
+      }
+
+      const res = await fetch(`/api/tickets/${id}`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({ estado }),
+      })
+
+      if (!res.ok) throw new Error("Error actualizando ticket")
+
+      setTickets(tickets.map(t => t.id === id ? { ...t, estado } : t))
+      setSelectedTicket(null)
+    } catch (err) {
+      console.error("Error:", err)
+      alert("No se pudo actualizar el ticket")
+    }
+  }
+
+  const handleDeleteTicket = async (id: number) => {
+    if (!confirm("¿Seguro que quieres eliminar este ticket?")) return
+
+    try {
+      const token = localStorage.getItem("token") || ""
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      }
+      if (token) {
+        headers.Authorization = `Bearer ${token}`
+      }
+
+      const res = await fetch(`/api/tickets/${id}`, {
+        method: "DELETE",
+        headers,
+      })
+
+      if (!res.ok) throw new Error("Error eliminando ticket")
+
+      // Actualizar lista local
+      setTickets(tickets.filter(t => t.id !== id))
+      setSelectedTicket(null)
+    } catch (err) {
+      console.error("Error:", err)
+      alert("No se pudo eliminar el ticket")
+    }
+  }
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'critical': return 'bg-destructive text-destructive-foreground';
@@ -156,6 +216,62 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-background">
+      <Dialog open={!!selectedTicket} onOpenChange={() => setSelectedTicket(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              Ticket {selectedTicket?.ticketId}
+              <DialogClose>
+              </DialogClose>
+            </DialogTitle>
+          </DialogHeader>
+          {selectedTicket && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium">Cliente:</p>
+                <p className="text-sm">{selectedTicket.user?.nombre || selectedTicket.clienteNombre}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Email:</p>
+                <p className="text-sm">{selectedTicket.user?.email || "No disponible"}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Asunto:</p>
+                <p className="text-sm">{selectedTicket.asunto}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Detalle:</p>
+                <p className="text-sm">{selectedTicket.detalle}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Prioridad:</p>
+                <Badge className={getPriorityColor(selectedTicket.prioridad === "crítica" ? "critical" : "high")}>
+                  {selectedTicket.prioridad}
+                </Badge>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Estado:</p>
+                <Badge className={getStatusColor(selectedTicket.estado === "pendiente" ? "open" : "in-progress")}>
+                  {selectedTicket.estado}
+                </Badge>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Creado:</p>
+                <p className="text-sm">{new Date(selectedTicket.createdAt).toLocaleString("es-ES")}</p>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="ghost" size="icon" onClick={() => handleUpdateTicket(selectedTicket.id, "resuelto")}>
+                  <Check className="h-4 w-4 text-success" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => handleDeleteTicket(selectedTicket.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <header className="sticky top-0 z-10 border-b border-border/50 bg-card/30 backdrop-blur-sm">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center space-x-4">
@@ -322,7 +438,7 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                                 })}</span>
                               </div>
                             </div>
-                            <Button size="sm" variant="outline" className="w-full">
+                            <Button size="sm" variant="outline" className="w-full" onClick={() => setSelectedTicket(ticket)}>
                               Ver Ticket
                             </Button>
                           </div>
