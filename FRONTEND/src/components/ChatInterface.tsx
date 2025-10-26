@@ -131,7 +131,6 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
     try {
       const result = await sendMessage(activeChat, tempInput, tempImage)
       
-      // ✅ Si hay sugerencia de ticket, mostrar diálogo
       if (result.requiresTicket && result.ticketSuggestion) {
         setPendingTicket(result.ticketSuggestion)
         setShowTicketDialog(true)
@@ -145,7 +144,6 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
     }
   }
 
-  // ✅ Confirmar creación de ticket
   const handleConfirmTicket = async () => {
     if (!pendingTicket) return
 
@@ -163,7 +161,6 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
     }
   }
 
-  // ✅ Cancelar creación de ticket
   const handleCancelTicket = async () => {
     if (!pendingTicket) {
       setShowTicketDialog(false)
@@ -176,7 +173,6 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
       setPendingTicket(null)
     } catch (error) {
       console.error("Error al cancelar ticket:", error)
-      // Silencioso, solo cerramos el diálogo
       setShowTicketDialog(false)
       setPendingTicket(null)
     }
@@ -231,7 +227,6 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
 
   return (
     <div className="h-screen flex bg-gradient-background">
-      {/* ✅ Diálogo de Confirmación de Ticket */}
       <AlertDialog open={showTicketDialog} onOpenChange={setShowTicketDialog}>
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
@@ -279,7 +274,6 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* SIDEBAR */}
       <div className="w-80 border-r border-border/50 flex flex-col bg-card/30 backdrop-blur-sm">
         <div className="p-4 border-b border-border/50">
           <div className="flex items-center justify-between mb-4">
@@ -363,7 +357,6 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
         </div>
       </div>
 
-      {/* CHAT AREA */}
       <div className="flex-1 flex flex-col">
         <div className="p-4 border-b border-border/50 bg-card/30 backdrop-blur-sm flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -373,7 +366,7 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="font-semibold">{currentChat?.title || "Selecciona un chat"}</h3>
+              <h3 className="font-semibold">{currentChat?.title || "Bienvenido 👋​🤖💬​"}</h3>
               <p className="text-sm text-muted-foreground">Asistente IA • Siempre disponible</p>
             </div>
           </div>

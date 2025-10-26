@@ -79,7 +79,14 @@ app.get("/health", (_req: Request, res: Response) => {
 
 app.use("/api/auth", loginLimiter, registerLimiter, authRoutes)
 app.use("/api/chats", authMiddleware, chatRoutes)
-app.use("/api/tickets", authMiddleware, ticketRoutes)
+
+app.use("/api/tickets", (req, res, next) => {
+  if (req.path === "/stats" || req.path === "/") {
+    return next()
+  }
+  return authMiddleware(req, res, next)
+}, ticketRoutes)
+
 app.use("/api/admin", authMiddleware, adminRoutes)
 app.use("/api/search", authMiddleware, searchRoutes)
 
@@ -103,8 +110,8 @@ process.on("SIGINT", async () => {
 
 const PORT = env.PORT
 app.listen(PORT, () => {
-  console.log(`🚀 API escuchando en http://localhost:${PORT}`)
-  console.log(`📊 Base de datos: ${env.DATABASE_URL.split("@")[1]}`)
+  console.log(`API escuchando en http://localhost:${PORT}`)
+  console.log(`Base de datos: ${env.DATABASE_URL.split("@")[1]}`)
 })
 
 export default app

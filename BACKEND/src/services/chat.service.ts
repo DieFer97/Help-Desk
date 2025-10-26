@@ -101,16 +101,13 @@ export const chatService = {
 
       const responseData = response.data
 
-      // ✅ NUEVO: Verificar si N8N retornó un ticket (consulta compleja)
       if (responseData.ticket) {
-        // N8N creó un ticket automáticamente, necesitamos interceptarlo
         const ticket = responseData.ticket
-        
-        // Guardamos el mensaje de la IA
+
         const aiMessage = await prisma.message.create({
           data: {
             chatId,
-            content: responseData.respuesta || "Gracias por tu consulta. Un agente te contactará pronto.",
+            content: responseData.respuesta || `Ticket creado: ${ticket.ticketId}. Un agente te contactará pronto.`,
             sender: "ai",
           },
         })
@@ -123,27 +120,25 @@ export const chatService = {
           },
         })
 
-        logger.info(`Consulta compleja detectada en chat ${chatId}`)
-        
-        // ✅ RETORNAR: Con sugerencia de ticket para que el frontend muestre el diálogo
-        return { 
-          userMessage, 
+        logger.info(`Consulta compleja detectada en chat ${chatId} → Ticket: ${ticket.ticketId}`)
+
+        return {
+          userMessage,
           aiMessage,
           requiresTicket: true,
           ticketSuggestion: {
-          ticketNumber: ticket.ticketId,
-          clientName: ticket.clienteNombre,
-          clientEmail: user.email,
-          subject: content.substring(0, 100),  // ✅ Usar el mensaje del usuario
-          detail: content,  // ✅ Mensaje completo
-          imageUrl: ticket.imageUrl || null,
-          chatId: chatId.toString(),
-          userId: userId
-        }
+            ticketNumber: ticket.ticketId,
+            clientName: ticket.clienteNombre,
+            clientEmail: user.email,
+            subject: content.substring(0, 100),
+            detail: content,
+            imageUrl: ticket.imageUrl || null,
+            chatId: chatId.toString(),
+            userId: userId
+          }
         }
       }
 
-      // ✅ Si no hay ticket, es una consulta simple
       const aiMessage = await prisma.message.create({
         data: {
           chatId,
@@ -169,9 +164,8 @@ export const chatService = {
     }
   },
 
-  // ✅ NUEVO: Confirmar ticket (elimina el pendiente y crea uno nuevo confirmado)
+  // MEJORADO: Marca el ticket como "confirmado"
   async confirmTicket(ticketId: string, userId: number) {
-    // Verificar que el ticket existe y pertenece al usuario
     const ticket = await prisma.ticket.findFirst({
       where: {
         ticketId: ticketId,
@@ -184,20 +178,18 @@ export const chatService = {
       throw new AppError(404, "Ticket no encontrado o ya fue procesado")
     }
 
-    // Actualizar el estado del ticket a confirmado
     const confirmedTicket = await prisma.ticket.update({
       where: { id: ticket.id },
       data: { 
-        estado: 'pendiente',
+        estado: 'confirmado',
         updatedAt: new Date()
       }
     })
 
-    logger.info(`Ticket confirmado: ${ticketId} por usuario ${userId}`)
+    logger.info(`Ticket CONFIRMADO: ${ticketId} por usuario ${userId}`)
     return confirmedTicket
   },
 
-  // ✅ NUEVO: Cancelar ticket (eliminar el ticket temporal)
   async cancelTicket(ticketId: string, userId: number) {
     const ticket = await prisma.ticket.findFirst({
       where: {

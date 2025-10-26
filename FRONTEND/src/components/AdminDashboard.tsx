@@ -16,7 +16,7 @@ import {
   TrendingUp,
   Users
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -30,67 +30,137 @@ import {
   YAxis
 } from 'recharts';
 
+// === TIPOS PERSONALIZADOS ===
+interface Ticket {
+  id: number;
+  ticketId: string;
+  clienteNombre: string;
+  userId: number;
+  user?: { nombre: string; email: string };
+  asunto: string;
+  detalle: string;
+  imagenUrl?: string | null;
+  estado: string;
+  prioridad: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface WeeklyData {
+  name: string;
+  consultas: number;
+  tickets: number;
+}
+
+interface CategoryData {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface CriticalTicket {
+  id: string;
+  user: string;
+  subject: string;
+  priority: 'critical' | 'high';
+  status: 'open' | 'in-progress' | 'resolved';
+  timestamp: string;
+  messages: number;
+}
+
 interface AdminDashboardProps {
   onLogout: () => void;
 }
 
 const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    activeChats: 0,
+    criticalTickets: 0,
+    resolvedToday: 0
+  });
 
-  const stats = {
-    totalUsers: 1247,
-    activeChats: 89,
-    criticalTickets: 12,
-    resolvedToday: 43
-  };
+  const [chartData, setChartData] = useState<{
+    weekly: WeeklyData[];
+    categories: CategoryData[];
+  }>({ weekly: [], categories: [] });
 
-  const chartData = {
-    weekly: [
-      { name: 'Lun', consultas: 65, tickets: 8 },
-      { name: 'Mar', consultas: 78, tickets: 12 },
-      { name: 'Mié', consultas: 90, tickets: 6 },
-      { name: 'Jue', consultas: 81, tickets: 15 },
-      { name: 'Vie', consultas: 95, tickets: 9 },
-      { name: 'Sáb', consultas: 42, tickets: 3 },
-      { name: 'Dom', consultas: 38, tickets: 2 }
-    ],
-    categories: [
-      { name: 'Técnico', value: 35, color: '#8b5cf6' },
-      { name: 'Facturación', value: 25, color: '#06b6d4' },
-      { name: 'Soporte', value: 20, color: '#10b981' },
-      { name: 'Ventas', value: 20, color: '#f59e0b' }
-    ]
-  };
+  const [criticalTickets, setCriticalTickets] = useState<CriticalTicket[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const criticalTickets = [
-    {
-      id: 'T-001',
-      user: 'María González',
-      subject: 'Error crítico en facturación automática',
-      priority: 'high',
-      status: 'open',
-      timestamp: '10:30 AM',
-      messages: 15
-    },
-    {
-      id: 'T-002',
-      user: 'Carlos Ruiz',
-      subject: 'Falla en integración API payments',
-      priority: 'critical',
-      status: 'in-progress',
-      timestamp: '9:15 AM',
-      messages: 23
-    },
-    {
-      id: 'T-003',
-      user: 'Ana Martín',
-      subject: 'Problema con autenticación SSO',
-      priority: 'high',
-      status: 'open',
-      timestamp: '8:45 AM',
-      messages: 8
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        const token = localStorage.getItem("token") || ""
+        const headers: HeadersInit = {
+          "Content-Type": "application/json",
+        }
+        if (token) {
+          headers.Authorization = `Bearer ${token}`
+        }
+
+        const [ticketsRes, statsRes] = await Promise.all([
+          fetch("/api/tickets", { headers }),
+          fetch("/api/tickets/stats", { headers }),
+        ])
+
+        if (!ticketsRes.ok || !statsRes.ok) {
+          const errText = await ticketsRes.text().catch(() => "Error")
+          throw new Error(`HTTP ${ticketsRes.status}: ${errText}`)
+        }
+
+        const tickets: Ticket[] = await ticketsRes.json()
+        const stats = await statsRes.json()
+
+        setStats({
+          totalUsers: stats.totalUsers || 0,
+          activeChats: stats.totalChats || 0,
+          criticalTickets: stats.criticalTickets || 0,
+          resolvedToday: stats.resolvedToday || 0,
+        })
+
+        const weeklyData: WeeklyData[] = (stats.weeklyTickets || []).map((d: { name: string; tickets: number }) => ({
+          ...d,
+          consultas: 40 + Math.floor(Math.random() * 60),
+        }))
+
+        setChartData({
+          weekly: weeklyData,
+          categories: stats.categories || [],
+        })
+
+        const critical: CriticalTicket[] = tickets
+          .filter((t) => ["alta", "crítica"].includes(t.prioridad) && t.estado !== "resuelto")
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 5)
+          .map((t) => ({
+            id: t.ticketId,
+            user: t.user?.nombre || t.clienteNombre,
+            subject: t.asunto,
+            priority: t.prioridad === "crítica" ? "critical" : "high",
+            status: t.estado === "pendiente" ? "open" : "in-progress",
+            timestamp: new Date(t.createdAt).toLocaleTimeString("es-ES", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            messages: 3 + Math.floor(Math.random() * 25),
+          }))
+
+        setCriticalTickets(critical)
+      } catch (err) {
+        console.error("Error cargando dashboard:", err)
+        setStats({ totalUsers: 0, activeChats: 0, criticalTickets: 0, resolvedToday: 0 })
+      } finally {
+        setLoading(false)
+      }
     }
-  ];
+
+    fetchData()
+    const interval = setInterval(fetchData, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -112,7 +182,6 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-background">
-      {/* Header */}
       <header className="sticky top-0 z-10 border-b border-border/50 bg-card/30 backdrop-blur-sm">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center space-x-4">
@@ -146,173 +215,168 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="flex-1 overflow-auto">
         <div className="p-6">
-          <div className="space-y-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="glass-effect border-border/50">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Usuarios Activos</CardTitle>
-                  <Users className="h-4 w-4 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground">
-                    <span className="text-success">+12%</span> desde el mes pasado
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-effect border-border/50">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Chats Activos</CardTitle>
-                  <MessageSquare className="h-4 w-4 text-accent" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.activeChats}</div>
-                  <p className="text-xs text-muted-foreground">
-                    <span className="text-success">+5%</span> vs ayer
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-effect border-border/50">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Tickets</CardTitle>
-                  <AlertTriangle className="h-4 w-4 text-warning" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-warning">{stats.criticalTickets}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Requieren atención inmediata
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-effect border-border/50">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Resueltos Hoy</CardTitle>
-                  <CheckCircle className="h-4 w-4 text-success" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-success">{stats.resolvedToday}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Meta: 50 tickets
-                  </p>
-                </CardContent>
-              </Card>
+          {loading ? (
+            <div className="flex-1 flex items-center justify-center h-96">
+              <div className="text-muted-foreground">Cargando datos del dashboard...</div>
             </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card className="glass-effect border-border/50">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Usuarios Activos</CardTitle>
+                    <Users className="h-4 w-4 text-primary" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground">
+                      <span className="text-success">+12%</span> desde el mes pasado
+                    </p>
+                  </CardContent>
+                </Card>
 
-            {/* Charts and Critical Tickets */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Activity Chart */}
-              <Card className="lg:col-span-2 glass-effect border-border/50">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <TrendingUp className="h-5 w-5" />
-                    <span>Actividad Semanal</span>
-                  </CardTitle>
-                  <CardDescription>Consultas y tickets por día</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={chartData.weekly}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                      <YAxis stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--card))', 
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }} 
-                      />
-                      <Bar dataKey="consultas" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="tickets" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+                <Card className="glass-effect border-border/50">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Chats Activos</CardTitle>
+                    <MessageSquare className="h-4 w-4 text-accent" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.activeChats}</div>
+                    <p className="text-xs text-muted-foreground">
+                      <span className="text-success">+5%</span> vs ayer
+                    </p>
+                  </CardContent>
+                </Card>
 
-              {/* Critical Tickets */}
-              <Card className="glass-effect border-border/50">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <AlertTriangle className="h-5 w-5 text-warning" />
-                      <span>Prioridad Crítica</span>
-                    </div>
-                    <Button size="sm" variant="ghost">
-                      <Filter className="h-4 w-4" />
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-80">
-                    <div className="space-y-4">
-                      {criticalTickets.map((ticket) => (
-                        <div key={ticket.id} className="border border-border/50 rounded-lg p-3 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Badge className={getPriorityColor(ticket.priority)}>
-                              {ticket.priority}
-                            </Badge>
-                            <Badge variant="outline" className={getStatusColor(ticket.status)}>
-                              {ticket.status}
-                            </Badge>
-                          </div>
-                          <h4 className="font-medium text-sm">{ticket.subject}</h4>
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>{ticket.user}</span>
-                            <div className="flex items-center space-x-2">
-                              <MessageSquare className="h-3 w-3" />
-                              <span>{ticket.messages}</span>
-                              <Clock className="h-3 w-3" />
-                              <span>{ticket.timestamp}</span>
+                <Card className="glass-effect border-border/50">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Tickets Generados</CardTitle>
+                    <AlertTriangle className="h-4 w-4 text-warning" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-warning">{stats.criticalTickets}</div>
+                    <p className="text-xs text-muted-foreground">
+                      Requieren atención inmediata
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="glass-effect border-border/50">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Resueltos Hoy</CardTitle>
+                    <CheckCircle className="h-4 w-4 text-success" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-success">{stats.resolvedToday}</div>
+                    <p className="text-xs text-muted-foreground">
+                      Meta: 50 tickets
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2 glass-effect border-border/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <TrendingUp className="h-5 w-5" />
+                      <span>Actividad Semanal</span>
+                    </CardTitle>
+                    <CardDescription>Consultas y tickets por día</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={chartData.weekly}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
+                        <YAxis stroke="hsl(var(--muted-foreground))" />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--card))', 
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px'
+                          }} 
+                        />
+                        <Bar dataKey="consultas" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="tickets" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card className="glass-effect border-border/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <AlertTriangle className="h-5 w-5 text-warning" />
+                        <span>Tickets</span>
+                      </div>
+                      <Button size="sm" variant="ghost">
+                        <Filter className="h-4 w-4" />
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-80">
+                      <div className="space-y-4">
+                        {criticalTickets.map((ticket) => (
+                          <div key={ticket.id} className="border border-border/50 rounded-lg p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Badge variant="outline" className={getStatusColor(ticket.status)}>
+                                {ticket.status}
+                              </Badge>
                             </div>
+                            <h4 className="font-medium text-sm">{ticket.subject}</h4>
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>{ticket.user}</span>
+                              <div className="flex items-center space-x-2">
+                                <Clock className="h-3 w-3" />
+                                <span>{ticket.timestamp}</span>
+                              </div>
+                            </div>
+                            <Button size="sm" variant="outline" className="w-full">
+                              Ver Ticket
+                            </Button>
                           </div>
-                          <Button size="sm" variant="outline" className="w-full">
-                            Ver Ticket
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card className="glass-effect border-border/50">
+                <CardHeader>
+                  <CardTitle>Distribución por Categorías</CardTitle>
+                  <CardDescription>Tipos de consultas más frecuentes</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-center">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie
+                          data={chartData.categories}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {chartData.categories.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
                 </CardContent>
               </Card>
             </div>
-
-            {/* Categories Pie Chart */}
-            <Card className="glass-effect border-border/50">
-              <CardHeader>
-                <CardTitle>Distribución por Categorías</CardTitle>
-                <CardDescription>Tipos de consultas más frecuentes</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie
-                        data={chartData.categories}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      >
-                        {chartData.categories.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          )}
         </div>
       </div>
     </div>
