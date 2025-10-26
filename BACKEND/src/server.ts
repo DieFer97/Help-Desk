@@ -81,7 +81,7 @@ app.use("/api/auth", loginLimiter, registerLimiter, authRoutes)
 app.use("/api/chats", authMiddleware, chatRoutes)
 
 app.use("/api/tickets", (req, res, next) => {
-  if (req.path === "/stats" || req.path === "/") {
+  if (req.path === "/stats" || req.path === "/" || req.path === "/recent-queries") {
     return next()
   }
   return authMiddleware(req, res, next)
