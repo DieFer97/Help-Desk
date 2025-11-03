@@ -10,6 +10,7 @@ import authRoutes from "./routes/auth"
 import chatRoutes from "./routes/chat"
 import searchRoutes from "./routes/search"
 import ticketRoutes from "./routes/tickets"
+import uploadRoutes from "./routes/upload";
 
 import { authMiddleware } from "./middleware/auth"
 import { errorHandler } from "./middleware/errorHandler"
@@ -79,6 +80,7 @@ app.get("/health", (_req: Request, res: Response) => {
 
 app.use("/api/auth", loginLimiter, registerLimiter, authRoutes)
 app.use("/api/chats", authMiddleware, chatRoutes)
+app.use("/api/upload", authMiddleware, uploadRoutes)
 
 app.use("/api/tickets", (req, res, next) => {
   if (req.path === "/stats" || req.path === "/" || req.path === "/recent-queries") {
@@ -110,8 +112,9 @@ process.on("SIGINT", async () => {
 
 const PORT = env.PORT
 app.listen(PORT, () => {
-  console.log(`API escuchando en http://localhost:${PORT}`)
-  console.log(`Base de datos: ${env.DATABASE_URL.split("@")[1]}`)
+  console.log(`✅ API escuchando en http://localhost:${PORT}`)
+  console.log(`✅ Base de datos: ${env.DATABASE_URL.split("@")[1]}`)
+  console.log(`✅ Cloudinary configurado: ${env.CLOUDINARY_CLOUD_NAME}`)
 })
 
 export default app

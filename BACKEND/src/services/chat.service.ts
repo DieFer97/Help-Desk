@@ -1,10 +1,23 @@
 import { PrismaClient } from "@prisma/client"
 import axios from "axios"
+import FormData from "form-data"
 import { getEnv } from "../config/env"
 import { AppError } from "../middleware/errorHandler"
 import { logger } from "../utils/logger"
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    }
+  },
+  log: ['error', 'warn'],
+})
+
+process.on('beforeExit', async () => {
+  await prisma.$disconnect()
+})
+
 const env = getEnv()
 
 export const chatService = {
@@ -91,15 +104,92 @@ export const chatService = {
     })
 
     try {
-      const response = await axios.post(env.N8N_WEBHOOK_URL, {
-        message: content,
-        imageUrl,
-        userId,
-        chatId,
-        clienteNombre: user.nombre,
-      })
+      let n8nResponse
 
-      const responseData = response.data
+      if (imageUrl) {
+        const form = new FormData()
+        
+        try {
+          logger.info(`Descargando imagen desde: ${imageUrl}`)
+          
+          const imageResponse = await axios.get(imageUrl, { 
+            responseType: 'stream',
+            timeout: 15000
+          })
+          
+          const contentType = imageResponse.headers['content-type'] || 'image/png'
+          const extension = contentType.split('/')[1] || 'png'
+          
+          logger.info(`Imagen descargada, Content-Type: ${contentType}`)
+          
+          form.append('image', imageResponse.data, {
+            filename: `image.${extension}`,
+            contentType: contentType
+          })
+          form.append('userId', userId.toString())
+          form.append('chatId', chatId.toString())
+          form.append('clienteNombre', user.nombre)
+          form.append('message', content)
+          
+          logger.info(`Enviando form-data a n8n. Esperando respuesta de Ollama...`)
+          
+          n8nResponse = await axios.post(env.N8N_WEBHOOK_URL, form, {
+            headers: {
+              ...form.getHeaders()
+            },
+            timeout: 900000,
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity
+          })
+          
+          logger.info(`Respuesta recibida de n8n exitosamente`)
+        } catch (error) {
+          if ((error as any).code === 'ECONNABORTED') {
+            logger.error(`Timeout: Ollama tardó más de 15 minutos`)
+            throw new AppError(500, "El análisis de imagen tardó demasiado. Intenta con una imagen más pequeña.")
+          }
+          logger.error(`Error procesando imagen: ${(error as any).message || error}`)
+          throw new AppError(500, "Error procesando la imagen")
+        }
+      } else {
+        logger.info(`Enviando mensaje de texto a n8n`)
+        
+        n8nResponse = await axios.post(env.N8N_WEBHOOK_URL, {
+          message: content,
+          userId,
+          chatId,
+          clienteNombre: user.nombre,
+        }, {
+          timeout: 300000,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        logger.info(`Respuesta recibida de n8n`)
+      }
+
+      let responseData = n8nResponse.data
+      
+      logger.info(`Respuesta RAW de n8n: ${JSON.stringify(responseData).substring(0, 200)}...`)
+      
+      if (typeof responseData === 'string') {
+        try {
+          responseData = JSON.parse(responseData)
+          logger.info('Respuesta parseada desde string a JSON')
+        } catch (error) {
+          logger.warn('No se pudo parsear respuesta como JSON, usando estructura por defecto')
+          responseData = {
+            tipo: 'simple',
+            respuesta: responseData,
+            contexto: 'Análisis de imagen'
+          }
+        }
+      }
+      
+      const aiResponse = responseData.respuesta || responseData.imageAnalysis || responseData.message || "No se pudo procesar la solicitud"
+      
+      logger.info(`Respuesta IA extraída (${aiResponse.length} caracteres): ${aiResponse.substring(0, 100)}...`)
 
       if (responseData.ticket) {
         const ticket = responseData.ticket
@@ -107,7 +197,7 @@ export const chatService = {
         const aiMessage = await prisma.message.create({
           data: {
             chatId,
-            content: responseData.respuesta || `Ticket creado: ${ticket.ticketId}. Un agente te contactará pronto.`,
+            content: aiResponse,
             sender: "ai",
           },
         })
@@ -115,7 +205,7 @@ export const chatService = {
         await prisma.chat.update({
           where: { id: chatId },
           data: {
-            lastMessage: aiMessage.content,
+            lastMessage: aiResponse,
             timestamp: new Date(),
           },
         })
@@ -142,7 +232,7 @@ export const chatService = {
       const aiMessage = await prisma.message.create({
         data: {
           chatId,
-          content: responseData.respuesta || "No se pudo procesar la solicitud",
+          content: aiResponse,
           sender: "ai",
         },
       })
@@ -150,21 +240,20 @@ export const chatService = {
       await prisma.chat.update({
         where: { id: chatId },
         data: {
-          lastMessage: aiMessage.content,
+          lastMessage: aiResponse,
           timestamp: new Date(),
         },
       })
 
-      logger.info(`Mensaje procesado en chat ${chatId}`)
+      logger.info(`Mensaje procesado exitosamente en chat ${chatId}`)
       
       return { userMessage, aiMessage }
     } catch (error) {
-      logger.error(`Error llamando N8n webhook: ${error}`)
-      throw new AppError(500, "Error procesando mensaje")
+      logger.error(`Error en addMessage: ${(error as any).message || error}`)
+      throw error instanceof AppError ? error : new AppError(500, "Error procesando mensaje")
     }
   },
 
-  // MEJORADO: Marca el ticket como "confirmado"
   async confirmTicket(ticketId: string, userId: number) {
     const ticket = await prisma.ticket.findFirst({
       where: {

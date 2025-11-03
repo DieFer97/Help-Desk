@@ -19,7 +19,6 @@ export interface Chat {
   messages: Message[]
 }
 
-// ✅ INTERFAZ: Sugerencia de ticket
 export interface TicketSuggestion {
   ticketNumber: string
   clientName: string
@@ -51,7 +50,6 @@ interface ApiMessage {
   timestamp: string
 }
 
-// ✅ INTERFAZ: Respuesta con posible ticket
 interface MessageResponse {
   userMessage: ApiMessage
   aiMessage: ApiMessage
@@ -309,7 +307,6 @@ export const useChats = () => {
           }),
         )
 
-        // ✅ RETORNAR: Incluir requiresTicket y ticketSuggestion
         return { 
           success: true, 
           requiresTicket: requiresTicket || false,
@@ -335,7 +332,6 @@ export const useChats = () => {
     [token, chats, updateChatTitle],
   )
 
-  // ✅ FUNCIÓN: Confirmar creación de ticket
   const confirmTicket = useCallback(
     async (ticketNumber: string) => {
       if (!token) throw new Error("No hay token de autenticación")
@@ -362,7 +358,7 @@ export const useChats = () => {
     [token],
   )
 
-  // ✅ FUNCIÓN: Cancelar creación de ticket
+
   const cancelTicket = useCallback(
     async (ticketNumber: string) => {
       if (!token) throw new Error("No hay token de autenticación")

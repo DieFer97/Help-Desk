@@ -66,7 +66,6 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
   const [hoveredChat, setHoveredChat] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // ✅ Estado para el diálogo de ticket
   const [showTicketDialog, setShowTicketDialog] = useState(false)
   const [pendingTicket, setPendingTicket] = useState<TicketSuggestion | null>(null)
   const [isCreatingTicket, setIsCreatingTicket] = useState(false)
@@ -155,7 +154,7 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
       setPendingTicket(null)
     } catch (error) {
       console.error("Error al crear ticket:", error)
-      alert("❌ No se pudo crear el ticket. Intenta de nuevo.")
+      alert("No se pudo crear el ticket. Intenta de nuevo.")
     } finally {
       setIsCreatingTicket(false)
     }
@@ -246,14 +245,14 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
                 </div>
                 <div className="border-t pt-2 mt-2">
                   <span className="text-sm font-medium text-foreground block mb-1">Asunto:</span>
-                  <p className="text-sm text-muted-foreground line-clamp-3">
+                  <span className="text-sm text-muted-foreground line-clamp-3 block">
                     {pendingTicket?.subject}
-                  </p>
+                  </span>
                 </div>
               </div>
-              <p className="text-xs text-center text-muted-foreground">
+              <span className="text-xs text-center text-muted-foreground block">
                 Se creará un ticket de soporte y el administrador será notificado por WhatsApp
-              </p>
+              </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -347,7 +346,7 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
               </Avatar>
               <div>
                 <p className="text-sm font-medium">{user?.nombre || "Usuario"}</p>
-                <p className="text-xs text-muted-foreground">En línea</p>
+                <p className="text-xs text-muted-foreground">En lí­nea</p>
               </div>
             </div>
             <Button size="sm" variant="ghost" onClick={onLogout}>
@@ -366,7 +365,7 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="font-semibold">{currentChat?.title || "Bienvenido 👋​🤖💬​"}</h3>
+              <h3 className="font-semibold">{currentChat?.title || "Bienvenido 👋🏼🤖💬​"}</h3>
               <p className="text-sm text-muted-foreground">Asistente IA • Siempre disponible</p>
             </div>
           </div>

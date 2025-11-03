@@ -24,7 +24,8 @@ const LoginPage = () => {
       await login(email, password)
       navigate("/")
     } catch (err) {
-      setError("Error al iniciar sesión. Verifica tus credenciales.")
+      const errorMessage = err instanceof Error ? err.message : "Error al iniciar sesión. Verifica tus credenciales."
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -37,7 +38,8 @@ const LoginPage = () => {
       await register(email, password, name)
       navigate("/")
     } catch (err) {
-      setError("Error al crear la cuenta. Intenta de nuevo.")
+      const errorMessage = err instanceof Error ? err.message : "Error al crear la cuenta. Intenta de nuevo."
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -187,7 +189,7 @@ const LoginForm = ({ onLogin, onRegister, isLoading }: LoginFormProps) => {
             <Input
               id="name"
               type="text"
-              placeholder="Tu nombre"
+              placeholder="Tu nombre (mínimo 2 caracteres)"
               className="pl-10"
               value={regName}
               onChange={(e) => setRegName(e.target.value)}
@@ -217,7 +219,7 @@ const LoginForm = ({ onLogin, onRegister, isLoading }: LoginFormProps) => {
             <Input
               id="reg-password"
               type="password"
-              placeholder="••••••••"
+              placeholder="Mínimo 6 caracteres"
               className="pl-10"
               value={regPassword}
               onChange={(e) => setRegPassword(e.target.value)}
