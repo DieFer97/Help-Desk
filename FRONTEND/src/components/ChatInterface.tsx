@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import {
   AlertDialog,
@@ -16,10 +16,18 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Bot, ImageIcon, LogOut, Plus, Send, Settings, Ticket, Trash2, User, X } from "lucide-react"
-import { useRef, useState } from "react"
 
 import { useAuth } from "../contexts/AuthContext"
 import { useChats, type TicketSuggestion } from "../hooks/useChats"
@@ -56,8 +64,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
     confirmTicket,
     cancelTicket,
     deleteChat,
-    setChats,
   } = useChats()
+
   const [currentInput, setCurrentInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [activeChat, setActiveChat] = useState<string>("")
@@ -69,42 +77,47 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
   const [showTicketDialog, setShowTicketDialog] = useState(false)
   const [pendingTicket, setPendingTicket] = useState<TicketSuggestion | null>(null)
   const [isCreatingTicket, setIsCreatingTicket] = useState(false)
+  const [chatsLoaded, setChatsLoaded] = useState(false)
+
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [editedName, setEditedName] = useState(user?.nombre || "")
+  const [editedEmail, setEditedEmail] = useState(user?.email || "")
+  const [editedPassword, setEditedPassword] = useState("")
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
 
   useEffect(() => {
-    loadChats()
-  }, [loadChats])
+    if (!chatsLoaded && !chatsLoading && token) {
+      loadChats().then(() => setChatsLoaded(true)).catch(() => setChatsLoaded(true))
+    }
+  }, [chatsLoaded, chatsLoading, token, loadChats])
 
   useEffect(() => {
-    if (activeChat && token) {
-      loadChatMessages(activeChat)
-    }
+    if (activeChat && token) loadChatMessages(activeChat)
   }, [activeChat, token, loadChatMessages])
+
+  useEffect(() => {
+    setEditedName(user?.nombre || "")
+    setEditedEmail(user?.email || "")
+  }, [user])
 
   const currentChat = chats.find((chat) => chat.id === activeChat)
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
     if (!file) return
-
     if (!["image/jpeg", "image/png"].includes(file.type)) {
-      alert("Solo se permiten imágenes JPEG o PNG")
+      alert("Solo JPEG o PNG")
       return
     }
     if (file.size > 5 * 1024 * 1024) {
-      alert("La imagen debe ser menor a 5MB")
+      alert("Máximo 5MB")
       return
     }
-
-    const imageUrl = URL.createObjectURL(file)
-    setSelectedImage({ file, url: imageUrl })
-
+    setSelectedImage({ file, url: URL.createObjectURL(file) })
     if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
@@ -117,27 +130,21 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
 
   const sendUserMessage = async () => {
     if ((!currentInput.trim() && !selectedImage) || isLoading || !activeChat) return
-
     setIsLoading(true)
-    const messageContent = currentInput || (selectedImage ? "Analiza esta imagen." : "")
-
-    const tempInput = messageContent
-    const tempImage = selectedImage?.file
-
+    const content = currentInput || (selectedImage ? "Analiza esta imagen." : "")
+    const temp = content
+    const tempImg = selectedImage?.file
     setCurrentInput("")
     clearSelectedImage()
-
     try {
-      const result = await sendMessage(activeChat, tempInput, tempImage)
-      
-      if (result.requiresTicket && result.ticketSuggestion) {
-        setPendingTicket(result.ticketSuggestion)
+      const res = await sendMessage(activeChat, temp, tempImg)
+      if (res.requiresTicket && res.ticketSuggestion) {
+        setPendingTicket(res.ticketSuggestion)
         setShowTicketDialog(true)
       }
-    } catch (err) {
-      console.error("Error al enviar mensaje:", err)
-      alert("No se pudo enviar el mensaje. Intenta de nuevo.")
-      setCurrentInput(tempInput)
+    } catch {
+      alert("Error al enviar mensaje")
+      setCurrentInput(temp)
     } finally {
       setIsLoading(false)
     }
@@ -145,16 +152,14 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
 
   const handleConfirmTicket = async () => {
     if (!pendingTicket) return
-
     setIsCreatingTicket(true)
     try {
       await confirmTicket(pendingTicket.ticketNumber)
-      alert(`✅ Ticket ${pendingTicket.ticketNumber} creado exitosamente. El administrador ha sido notificado.`)
+      alert(`Ticket ${pendingTicket.ticketNumber} creado`)
       setShowTicketDialog(false)
       setPendingTicket(null)
-    } catch (error) {
-      console.error("Error al crear ticket:", error)
-      alert("No se pudo crear el ticket. Intenta de nuevo.")
+    } catch {
+      alert("Error al crear ticket")
     } finally {
       setIsCreatingTicket(false)
     }
@@ -165,64 +170,37 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
       setShowTicketDialog(false)
       return
     }
-
     try {
       await cancelTicket(pendingTicket.ticketNumber)
-      setShowTicketDialog(false)
-      setPendingTicket(null)
-    } catch (error) {
-      console.error("Error al cancelar ticket:", error)
-      setShowTicketDialog(false)
-      setPendingTicket(null)
+    } catch (err) {
+      console.error(err)
     }
+    setShowTicketDialog(false)
+    setPendingTicket(null)
   }
 
   const createNewChat = async () => {
     try {
-      const newChat = await createChat("Cargando...")
-      setActiveChat(newChat.id)
-    } catch (error) {
-      console.error("Error al crear chat:", error)
-      alert("No se pudo crear el chat. Intenta de nuevo.")
+      const nc = await createChat("Cargando...")
+      setActiveChat(nc.id)
+    } catch {
+      alert("Error al crear chat")
     }
   }
 
-  const handleDeleteChat = async (chatId: string, e: React.MouseEvent) => {
+  const handleDeleteChat = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
-
-    if (!confirm("¿Estás seguro de eliminar este chat?")) return
-
+    if (!confirm("¿Eliminar chat?")) return
     try {
-      await deleteChat(chatId)
-      if (activeChat === chatId) {
-        setActiveChat("")
-      }
-    } catch (error) {
-      console.error("Error al eliminar chat:", error)
-      alert("No se pudo eliminar el chat. Intenta de nuevo.")
+      await deleteChat(id)
+      if (activeChat === id) setActiveChat("")
+    } catch {
+      alert("Error al eliminar")
     }
   }
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("es-PE", {
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
-
-  const formatDateTime = (date: Date) => {
-    return date.toLocaleString("es-PE", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      timeZone: "America/Lima",
-      hour12: false,
-    })
-  }
+  const formatTime = (d: Date) => d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })
+  const formatDateTime = (d: Date) => d.toLocaleString("es-PE", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "America/Lima", hour12: false })
 
   return (
     <div className="h-screen flex bg-gradient-background">
@@ -231,126 +209,162 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <Ticket className="h-5 w-5 text-primary" />
-              ¿Desea crear un ticket?
+              ¿Crear ticket?
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-3 pt-2">
               <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-                <div className="flex justify-between items-start">
-                  <span className="text-sm font-medium text-foreground">Número de Ticket:</span>
-                  <span className="text-sm font-bold text-primary">{pendingTicket?.ticketNumber}</span>
-                </div>
-                <div className="flex justify-between items-start">
-                  <span className="text-sm font-medium text-foreground">Cliente:</span>
-                  <span className="text-sm text-foreground">{pendingTicket?.clientName}</span>
-                </div>
-                <div className="border-t pt-2 mt-2">
-                  <span className="text-sm font-medium text-foreground block mb-1">Asunto:</span>
-                  <span className="text-sm text-muted-foreground line-clamp-3 block">
-                    {pendingTicket?.subject}
-                  </span>
-                </div>
+                <div className="flex justify-between"><span className="text-sm font-medium">Ticket:</span><span className="text-sm font-bold text-primary">{pendingTicket?.ticketNumber}</span></div>
+                <div className="flex justify-between"><span className="text-sm font-medium">Cliente:</span><span className="text-sm">{pendingTicket?.clientName}</span></div>
+                <div className="border-t pt-2 mt-2"><span className="text-sm font-medium block mb-1">Asunto:</span><span className="text-sm text-muted-foreground line-clamp-3">{pendingTicket?.subject}</span></div>
               </div>
-              <span className="text-xs text-center text-muted-foreground block">
-                Se creará un ticket de soporte y el administrador será notificado por WhatsApp
-              </span>
+              <span className="text-xs text-center block">Se notificará por WhatsApp</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel 
-              onClick={handleCancelTicket}
-              disabled={isCreatingTicket}
-            >
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleConfirmTicket}
-              disabled={isCreatingTicket}
-              className="bg-primary hover:bg-primary/90"
-            >
+            <AlertDialogCancel onClick={handleCancelTicket} disabled={isCreatingTicket}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmTicket} disabled={isCreatingTicket} className="bg-primary hover:bg-primary/90">
               {isCreatingTicket ? "Creando..." : "Aceptar"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* NUEVO: MODAL PARA EDITAR PERFIL */}
+      <Dialog open={isEditingProfile} onOpenChange={setIsEditingProfile}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar perfil</DialogTitle>
+            <DialogDescription>
+              Actualiza tu información personal
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Nombre</Label>
+              <Input
+                id="name"
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                placeholder="Tu nombre"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="email">Correo electrónico</Label>
+              <Input
+                id="email"
+                type="email"
+                value={editedEmail}
+                onChange={(e) => setEditedEmail(e.target.value)}
+                placeholder="tu@ejemplo.com"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Nueva contraseña (opcional)</Label>
+              <Input
+                id="password"
+                type="password"
+                value={editedPassword}
+                onChange={(e) => setEditedPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditingProfile(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                // Aquí conectarás al backend cuando quieras
+                alert("¡Cambios guardados! (próximamente conectado al backend)")
+                setIsEditingProfile(false)
+                setEditedPassword("")
+              }}
+              className="bg-gradient-to-br from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            >
+              Guardar cambios
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="w-80 border-r border-border/50 flex flex-col bg-card/30 backdrop-blur-sm">
         <div className="p-4 border-b border-border/50">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gradient">Chat IA</h2>
             <div className="flex items-center space-x-2">
-              <Button size="sm" variant="ghost" onClick={createNewChat}>
-                <Plus className="h-4 w-4" />
-              </Button>
-              <Button size="sm" variant="ghost">
+              <Button size="sm" variant="ghost" onClick={createNewChat}><Plus className="h-4 w-4" /></Button>
+              <Button size="sm" variant="ghost" onClick={() => setIsEditingProfile(true)}>
                 <Settings className="h-4 w-4" />
               </Button>
             </div>
           </div>
           <Button onClick={createNewChat} className="w-full bg-gradient-primary hover:opacity-90 text-white">
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva Consulta
+            <Plus className="h-4 w-4 mr-2" /> Nueva Consulta
           </Button>
         </div>
 
         <ScrollArea className="flex-1">
           <div className="px-4 py-4 space-y-4">
-            {chats.map((chat) => (
-              <Card
-                key={chat.id}
-                className={`cursor-pointer transition-all hover:shadow-lg border-2 max-w-[18rem] ${
-                  activeChat === chat.id
-                    ? "border-primary bg-primary/15 shadow-md"
-                    : "border-border/40 bg-card/50 hover:bg-card/70 hover:border-border/60"
-                }`}
-                onClick={() => setActiveChat(chat.id)}
-                onMouseEnter={() => setHoveredChat(chat.id)}
-                onMouseLeave={() => setHoveredChat("")}
-              >
-                <CardContent className="p-4 flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm text-foreground truncate">{chat.title}</h3>
-                    <p className="text-xs text-muted-foreground truncate mt-2 line-clamp-2">{chat.lastMessage}</p>
-                  </div>
+            {chats.map((chat) => {
+              const lastUserMsg = chat.messages.length > 0
+                ? chat.messages.slice().reverse().find(m => m.sender === "user")?.content
+                : null
+              const previewText = lastUserMsg || chat.title
 
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-xs text-muted-foreground whitespace-nowrap font-medium">
-                      {formatTime(chat.timestamp)}
-                    </span>
+              return (
+                <Card
+                  key={chat.id}
+                  className={`cursor-pointer transition-all hover:shadow-lg border-2 max-w-[18rem] ${
+                    activeChat === chat.id
+                      ? "border-primary bg-primary/15 shadow-md"
+                      : "border-border/40 bg-card/50 hover:bg-card/70 hover:border-border/60"
+                  }`}
+                  onClick={() => setActiveChat(chat.id)}
+                  onMouseEnter={() => setHoveredChat(chat.id)}
+                  onMouseLeave={() => setHoveredChat("")}
+                >
+                  <CardContent className="p-4 flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-foreground truncate">{previewText}</p>
+                    </div>
 
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 transition-all hover:bg-destructive hover:text-destructive-foreground"
-                      style={{
-                        opacity: hoveredChat === chat.id ? 1 : 0,
-                        pointerEvents: hoveredChat === chat.id ? "auto" : "none",
-                      }}
-                      onClick={(e) => handleDeleteChat(chat.id, e)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {formatTime(chat.timestamp)}
+                      </span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 hover:bg-destructive hover:text-destructive-foreground"
+                        style={{ opacity: hoveredChat === chat.id ? 1 : 0, pointerEvents: hoveredChat === chat.id ? "auto" : "none" }}
+                        onClick={(e) => handleDeleteChat(chat.id, e)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         </ScrollArea>
 
-        <div className="p-4 border-t border-border/50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground">
+        <div className="border-t border-border/50 bg-card/30 backdrop-blur-sm">
+          <div className="flex items-center h-20 px-6 justify-between">
+            <div className="flex items-center space-x-4">
+              <Avatar className="h-14 w-14 ring-2 ring-purple-500/20">
+                <AvatarFallback className="bg-gradient-to-br from-purple-600 to-pink-600 text-white font-bold text-xl">
                   {user?.nombre.charAt(0).toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-medium">{user?.nombre || "Usuario"}</p>
-                <p className="text-xs text-muted-foreground">En lí­nea</p>
+                <p className="text-base font-semibold text-foreground">{user?.nombre || "Usuario"}</p>
+                <p className="text-sm text-muted-foreground">En línea</p>
               </div>
             </div>
-            <Button size="sm" variant="ghost" onClick={onLogout}>
-              <LogOut className="h-4 w-4" />
+            <Button size="icon" variant="ghost" onClick={onLogout} className="h-10 w-10">
+              <LogOut className="h-5 w-5" />
             </Button>
           </div>
         </div>
@@ -360,12 +374,10 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
         <div className="p-4 border-b border-border/50 bg-card/30 backdrop-blur-sm flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-accent text-accent-foreground">
-                <Bot className="h-4 w-4" />
-              </AvatarFallback>
+              <AvatarFallback className="bg-accent text-accent-foreground"><Bot className="h-4 w-4" /></AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="font-semibold">{currentChat?.title || "Bienvenido 👋🏼🤖💬​"}</h3>
+              <h3 className="font-semibold">{currentChat?.title || "Bienvenido"}</h3>
               <p className="text-sm text-muted-foreground">Asistente IA • Siempre disponible</p>
             </div>
           </div>
@@ -377,85 +389,92 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
 
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-4">
-            {currentChat?.messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex items-start space-x-3 animate-fade-in-up ${
-                  message.sender === "user" ? "flex-row-reverse space-x-reverse" : ""
-                }`}
-              >
+            {currentChat?.messages.map((msg) => (
+              <div key={msg.id} className={`flex items-start space-x-3 animate-fade-in-up ${msg.sender === "user" ? "flex-row-reverse space-x-reverse" : ""}`}>
                 <Avatar className="h-8 w-8 flex-shrink-0">
-                  <AvatarFallback
-                    className={
-                      message.sender === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-accent text-accent-foreground"
-                    }
-                  >
-                    {message.sender === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                  <AvatarFallback className={msg.sender === "user" ? "bg-primary text-primary-foreground" : "bg-accent text-accent-foreground"}>
+                    {msg.sender === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                   </AvatarFallback>
                 </Avatar>
-                <div className={`max-w-[70%] ${message.sender === "user" ? "text-right" : ""}`}>
-                  <Card className={message.sender === "user" ? "bg-primary text-primary-foreground" : "bg-muted/50"}>
+                <div className={`max-w-[70%] ${msg.sender === "user" ? "text-right" : ""}`}>
+                  <Card className={msg.sender === "user" ? "bg-primary text-primary-foreground" : "bg-muted/50"}>
                     <CardContent className="p-3">
-                      {message.imageUrl && (
-                        <img
-                          src={message.imageUrl || "/placeholder.svg"}
-                          alt="Imagen subida"
-                          className="max-w-[150px] max-h-[150px] rounded-md mb-2 object-cover"
-                        />
-                      )}
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                      {msg.imageUrl && <img src={msg.imageUrl} alt="Imagen subida" className="max-w-[150px] max-h-[150px] rounded-md mb-2 object-cover" />}
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                     </CardContent>
                   </Card>
-                  <span className="text-xs text-muted-foreground mt-1 block">{formatTime(message.timestamp)}</span>
+                  <span className="text-xs text-muted-foreground mt-1 block">{formatTime(msg.timestamp)}</span>
                 </div>
               </div>
             ))}
           </div>
         </ScrollArea>
 
-        <div className="p-4 border-t border-border/50 flex flex-col space-y-2">
-          {selectedImage && (
-            <div className="flex items-center space-x-2">
-              <img
-                src={selectedImage.url || "/placeholder.svg"}
-                alt="Vista previa de la imagen"
-                className="max-w-[100px] max-h-[100px] rounded-md object-cover"
+        <div className="border-t border-border/50 bg-card/30 backdrop-blur-sm">
+          <div className="flex items-center h-20 px-6 gap-4">
+            <div className="flex-1 flex items-end space-x-3">
+              <Input
+                placeholder="Escribe tu mensaje..."
+                value={currentInput}
+                onChange={(e) => setCurrentInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendUserMessage()}
+                disabled={isLoading}
+                className="min-h-14 text-base placeholder:text-muted-foreground/70 resize-none border-border/50 focus-visible:ring-purple-500/30"
+                aria-label="Mensaje"
               />
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={clearSelectedImage}
-                className="text-red-500 hover:text-red-600"
+
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                onClick={() => fileInputRef.current?.click()} 
+                disabled={isLoading}
+                className="h-12 w-12 rounded-xl hover:bg-accent/80"
+                aria-label="Adjuntar imagen"
               >
-                <X className="h-4 w-4" />
+                <ImageIcon className="h-6 w-6" />
+              </Button>
+
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                className="hidden"
+                aria-label="Subir imagen"
+                onChange={handleImageUpload}
+              />
+
+              <Button 
+                onClick={sendUserMessage} 
+                disabled={isLoading || (!currentInput.trim() && !selectedImage)}
+                className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg transition-all"
+                aria-label="Enviar mensaje"
+              >
+                {isLoading ? (
+                  <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Send className="h-6 w-6" />
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {selectedImage && (
+            <div className="px-6 pb-3 flex items-center space-x-3">
+              <img 
+                src={selectedImage.url} 
+                alt="Vista previa" 
+                className="max-w-[100px] max-h-[100px] rounded-lg object-cover shadow-md" 
+              />
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                onClick={clearSelectedImage} 
+                className="text-red-500 hover:bg-red-500/20 h-9 w-9"
+              >
+                <X className="h-5 w-5" />
               </Button>
             </div>
           )}
-          <div className="flex items-center space-x-2">
-            <Input
-              placeholder="Escribe tu mensaje..."
-              value={currentInput}
-              onChange={(e) => setCurrentInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendUserMessage()}
-              disabled={isLoading}
-            />
-            <Button size="icon" variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={isLoading}>
-              <ImageIcon className="h-4 w-4" />
-            </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/*"
-              className="hidden"
-              aria-label="Subir imagen"
-              onChange={handleImageUpload}
-            />
-            <Button onClick={sendUserMessage} disabled={isLoading || (!currentInput.trim() && !selectedImage)}>
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
         </div>
       </div>
     </div>
