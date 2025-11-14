@@ -33,7 +33,6 @@ import {
   YAxis
 } from 'recharts';
 
-// === TIPOS PERSONALIZADOS ===
 interface Ticket {
   id: number;
   ticketId: string;
@@ -67,6 +66,7 @@ interface RecentQuery {
   timestamp: string;
   userName: string;
   userEmail: string;
+  chatId: number;
 }
 
 interface AdminDashboardProps {
@@ -92,6 +92,7 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   const [loading, setLoading] = useState(true);
 
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [hoveredQuery, setHoveredQuery] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -124,7 +125,6 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         if (queriesRes.ok) {
           queriesData = await queriesRes.json()
           console.log("📊 Consultas recientes cargadas:", queriesData.length)
-          console.log("Datos de consultas:", queriesData)
         } else {
           console.error("Error cargando consultas:", queriesRes.status)
         }
@@ -243,6 +243,8 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
       return 'bg-destructive/10 text-destructive border-destructive/20';
     }
   };
+
+  const formatTime = (d: Date) => d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-background">
@@ -477,7 +479,7 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                 <Card className="glass-effect border-border/50">
                   <CardHeader>
                     <CardTitle>Últimas Consultas</CardTitle>
-                    <CardDescription>Mensajes recientes del chatbot</CardDescription>
+                    <CardDescription>Conversaciones recientes de los usuarios</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ScrollArea className="h-[350px]">
@@ -488,20 +490,51 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                           </div>
                         ) : (
                           recentQueries.map((query) => (
-                            <div key={query.id} className="border border-border/50 rounded-lg p-3 space-y-2 bg-card/50 hover:bg-card/70 transition-colors">
-                              <p className="text-xs font-medium text-primary">{query.userName}</p>
-                              <p className="text-sm line-clamp-2 text-foreground">{query.content}</p>
-                              <div className="flex items-center justify-end text-xs text-muted-foreground">
-                                <Clock className="h-3 w-3 mr-1" />
-                                <span>{new Date(query.timestamp).toLocaleDateString("es-ES", {
-                                  day: "2-digit",
-                                  month: "2-digit"
-                                })} {new Date(query.timestamp).toLocaleTimeString("es-ES", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}</span>
-                              </div>
-                            </div>
+                            <Card
+                              key={query.id}
+                              className={`cursor-pointer transition-all hover:shadow-lg border-2 ${
+                                hoveredQuery === query.id
+                                  ? "border-primary/50 bg-primary/5"
+                                  : "border-border/40 bg-card/50 hover:bg-card/70"
+                              }`}
+                              onMouseEnter={() => setHoveredQuery(query.id)}
+                              onMouseLeave={() => setHoveredQuery(null)}
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex items-start gap-3">
+                                  <Avatar className="h-10 w-10 flex-shrink-0">
+                                    <AvatarFallback className="bg-gradient-to-br from-purple-600 to-pink-600 text-white font-bold">
+                                      {query.userName.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <p className="text-sm font-semibold text-foreground truncate">
+                                        {query.userName}
+                                      </p>
+                                      <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
+                                        {formatTime(new Date(query.timestamp))}
+                                      </span>
+                                    </div>
+                                    
+                                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                                      {query.content}
+                                    </p>
+                                    
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs text-muted-foreground">
+                                        Chat #{query.chatId}
+                                      </span>
+                                      <Badge variant="outline" className="text-xs">
+                                        <MessageSquare className="h-3 w-3 mr-1" />
+                                        Consulta
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
                           ))
                         )}
                       </div>

@@ -216,4 +216,14 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+  /* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Section snap (opcional - para experiencia tipo presentación) */
+.section-container {
+  scroll-snap-align: start;
+}
+
 }

@@ -229,7 +229,6 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* NUEVO: MODAL PARA EDITAR PERFIL */}
       <Dialog open={isEditingProfile} onOpenChange={setIsEditingProfile}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -275,7 +274,6 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
             </Button>
             <Button
               onClick={() => {
-                // Aquí conectarás al backend cuando quieras
                 alert("¡Cambios guardados! (próximamente conectado al backend)")
                 setIsEditingProfile(false)
                 setEditedPassword("")

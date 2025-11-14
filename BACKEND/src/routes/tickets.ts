@@ -55,22 +55,42 @@ router.get(
 router.get(
   "/recent-queries",
   asyncHandler(async (_req: Request, res: Response) => {
-    const recentChats = await prisma.chat.findMany({
-      take: 10,
+    const allMessages = await prisma.message.findMany({
+      take: 50,
+      orderBy: { timestamp: "desc" },
+      select: { id: true, sender: true, content: true }
+    })
+    console.log("🔍 DEBUG - Valores de sender en BD:", 
+      allMessages.map(m => ({ id: m.id, sender: m.sender, preview: m.content.substring(0, 30) }))
+    )
+
+    const recentMessages = await prisma.message.findMany({
+      where: {
+        sender: "user",
+      },
+      take: 20,
       orderBy: { timestamp: "desc" },
       include: {
-        user: {
-          select: { nombre: true, email: true },
+        chat: {
+          include: {
+            user: {
+              select: { nombre: true, email: true },
+            },
+          },
         },
       },
     })
 
-    const queries = recentChats.map((chat) => ({
-      id: chat.id,
-      content: chat.lastMessage || chat.title,
-      timestamp: chat.timestamp,
-      userName: chat.user.nombre,
-      userEmail: chat.user.email,
+    console.log(`✅ Mensajes filtrados (sender='user'): ${recentMessages.length}`)
+
+    const queries = recentMessages.map((message) => ({
+      id: message.id,
+      chatId: message.chatId,
+      content: message.content,
+      timestamp: message.timestamp,
+      userName: message.chat.user.nombre,
+      userEmail: message.chat.user.email,
+      sender: message.sender,
     }))
 
     res.status(200).json(queries)

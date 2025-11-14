@@ -24,10 +24,10 @@ const Index = () => {
   }
 
   const handleLogout = () => {
-    logout()
-    sessionStorage.removeItem("hasSeenLoading")
-    navigate("/login")
-  }
+  logout()
+  sessionStorage.clear()
+  navigate("/")
+}
 
   if (showLoading) {
     return <LoadingScreen onComplete={handleLoadingComplete} />

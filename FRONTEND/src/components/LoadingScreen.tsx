@@ -37,8 +37,8 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-background relative overflow-hidden">
       <div className="absolute inset-0">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-primary/10 animate-pulse-glow" />
-        <div className="absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full bg-accent/10 animate-pulse-glow" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 w-32 h-32 rounded-full bg-primary-glow/10 animate-pulse-glow" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full bg-accent/10 animate-pulse-glow [animation-delay:1s]" />
+        <div className="absolute top-1/2 left-1/2 w-32 h-32 rounded-full bg-primary-glow/10 animate-pulse-glow [animation-delay:2s]" />
       </div>
 
       <div className="text-center z-10 animate-fade-in-up">
@@ -57,7 +57,7 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
 
         <div className="w-64 mx-auto">
           <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-gradient-primary transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}
             />
