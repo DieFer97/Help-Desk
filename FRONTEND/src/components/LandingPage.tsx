@@ -575,7 +575,13 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
                   </div>
                   <div className="text-left">
                     <p className="text-2xl font-black text-white">Instituto SENATI</p>
-                    <p className="text-lg text-blue-400 font-bold">Perú - 2025 &#127477;&#127466;</p>
+                    <p className="text-lg text-blue-400 font-bold flex items-center gap-2">
+                    <span>Perú - 2025</span>
+                    <svg className="w-6 h-4" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="900" height="600" fill="#D91023"/>
+                      <rect x="300" width="300" height="600" fill="#FFFFFF"/>
+                    </svg>
+                  </p>
                   </div>
                 </div>
 
