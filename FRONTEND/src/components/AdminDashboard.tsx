@@ -31,7 +31,7 @@ import {
   Tooltip,
   XAxis,
   YAxis
-} from 'recharts';
+} from "recharts";
 
 interface Ticket {
   id: number;
@@ -113,94 +113,94 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
 
   const [admins, setAdmins] = useState<AdminUser[]>([
-  {
-    id: 6,
-    nombre: "Ricardo Kaká",
-    email: "riki10@gmail.com",
-    rol: "admin",
-    creadoEl: "2025-10-26T19:50:46.249Z",
-  },
-  {
-    id: 2,
-    nombre: "Juan Perez",
-    email: "juan.perez@example.com",
-    rol: "admin",
-    creadoEl: "2025-10-20T21:47:57.258Z",
-  },
-  {
-    id: 3,
-    nombre: "Diego De Almagro",
-    email: "diefer97gmail.com",
-    rol: "admin",
-    creadoEl: "2025-10-21T23:20:21.285Z",
-  },
-  {
-    id: 4,
-    nombre: "Luca Toni",
-    email: "luca@toni.com",
-    rol: "admin",
-    creadoEl: "2025-10-24T18:26:16.260Z",
-  },
-  {
-    id: 5,
-    nombre: "Mike Ortiz",
-    email: "portero@gmail.com",
-    rol: "admin",
-    creadoEl: "2025-10-26T19:56:40.249Z",
-  },
-  {
-    id: 7,
-    nombre: "Paul Elstak",
-    email: "goat1@gmail.com",
-    rol: "admin",
-    creadoEl: "2025-10-30T21:40:16.128Z",
-  },
-]);
+    {
+      id: 6,
+      nombre: "Ricardo Kaká",
+      email: "riki10@gmail.com",
+      rol: "admin",
+      creadoEl: "2025-10-26T19:50:46.249Z",
+    },
+    {
+      id: 2,
+      nombre: "Juan Perez",
+      email: "juan.perez@example.com",
+      rol: "admin",
+      creadoEl: "2025-10-20T21:47:57.258Z",
+    },
+    {
+      id: 3,
+      nombre: "Diego De Almagro",
+      email: "diefer97gmail.com",
+      rol: "admin",
+      creadoEl: "2025-10-21T23:20:21.285Z",
+    },
+    {
+      id: 4,
+      nombre: "Luca Toni",
+      email: "luca@toni.com",
+      rol: "admin",
+      creadoEl: "2025-10-24T18:26:16.260Z",
+    },
+    {
+      id: 5,
+      nombre: "Mike Ortiz",
+      email: "portero@gmail.com",
+      rol: "admin",
+      creadoEl: "2025-10-26T19:56:40.249Z",
+    },
+    {
+      id: 7,
+      nombre: "Paul Elstak",
+      email: "goat1@gmail.com",
+      rol: "admin",
+      creadoEl: "2025-10-30T21:40:16.128Z",
+    },
+  ]);
 
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([
-  {
-    id: 8,
-    nombre: "Cristiano Ronaldo",
-    email: "cr7@gmail.com",
-    rol: "cliente",
-    creadoEl: "2025-11-02T20:49:33.215Z",
-  },
-  {
-    id: 9,
-    nombre: "Sosimo Sacramento",
-    email: "sosimo32@gmail.com",
-    rol: "cliente",
-    creadoEl: "2025-11-03T21:39:24.215Z",
-  },
-  {
-    id: 10,
-    nombre: "Martin Garrix",
-    email: "martin1@gmail.com",
-    rol: "cliente",
-    creadoEl: "2025-11-04T13:02:31.093Z",
-  },
-  {
-    id: 11,
-    nombre: "Hugo Garcia",
-    email: "hugito7@gmail.com",
-    rol: "cliente",
-    creadoEl: "2025-11-11T20:27:26.267Z",
-  },
-  {
-    id: 12,
-    nombre: "Piere Papin",
-    email: "piere9@hotmail.com",
-    rol: "cliente",
-    creadoEl: "2025-11-14T20:08:58.545Z",
-  },
-  {
-    id: 1,
-    nombre: "Marco Van Basten",
-    email: "goleador9@gmail.com",
-    rol: "cliente",
-    creadoEl: "2025-10-19T10:00:00.000Z",
-  },
-]);
+    {
+      id: 8,
+      nombre: "Cristiano Ronaldo",
+      email: "cr7@gmail.com",
+      rol: "cliente",
+      creadoEl: "2025-11-02T20:49:33.215Z",
+    },
+    {
+      id: 9,
+      nombre: "Sosimo Sacramento",
+      email: "sosimo32@gmail.com",
+      rol: "cliente",
+      creadoEl: "2025-11-03T21:39:24.215Z",
+    },
+    {
+      id: 10,
+      nombre: "Martin Garrix",
+      email: "martin1@gmail.com",
+      rol: "cliente",
+      creadoEl: "2025-11-04T13:02:31.093Z",
+    },
+    {
+      id: 11,
+      nombre: "Hugo Garcia",
+      email: "hugito7@gmail.com",
+      rol: "cliente",
+      creadoEl: "2025-11-11T20:27:26.267Z",
+    },
+    {
+      id: 12,
+      nombre: "Piere Papin",
+      email: "piere9@hotmail.com",
+      rol: "cliente",
+      creadoEl: "2025-11-14T20:08:58.545Z",
+    },
+    {
+      id: 1,
+      nombre: "Marco Van Basten",
+      email: "goleador9@gmail.com",
+      rol: "cliente",
+      creadoEl: "2025-10-19T10:00:00.000Z",
+    },
+  ]);
 
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [pendingModalOpen, setPendingModalOpen] = useState(false);
@@ -213,174 +213,223 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
   const pageSize = 5;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+  const [editProfileModalOpen, setEditProfileModalOpen] = useState(false);
+  const [currentAdmin, setCurrentAdmin] = useState({
+    nombre: "Ricardo Kaká",
+    email: "riki10@gmail.com",
+    password: "",
+  });
 
-        const token = localStorage.getItem("token") || ""
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        }
-        if (token) {
-          headers.Authorization = `Bearer ${token}`
-        }
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
 
-        const [ticketsRes, statsRes, queriesRes] = await Promise.all([
-          fetch("/api/tickets", { headers }),
-          fetch("/api/tickets/stats", { headers }),
-          fetch("/api/tickets/recent-queries", { headers }),
-        ])
+      const token = localStorage.getItem("authToken") || "";
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
 
-        if (!ticketsRes.ok || !statsRes.ok) {
-          const errText = await ticketsRes.text().catch(() => "Error")
-          throw new Error(`HTTP ${ticketsRes.status}: ${errText}`)
-        }
+      const [ticketsRes, statsRes, queriesRes] = await Promise.all([
+        fetch("/api/tickets", { headers }),
+        fetch("/api/tickets/stats", { headers }),
+        fetch("/api/tickets/recent-queries", { headers }),
+      ]);
 
-        const ticketsData: Ticket[] = await ticketsRes.json()
-        const stats = await statsRes.json()
-        
-        let queriesData: RecentQuery[] = []
-        if (queriesRes.ok) {
-          queriesData = await queriesRes.json()
-          console.log("📊 Consultas recientes cargadas:", queriesData.length)
-        } else {
-          console.error("Error cargando consultas:", queriesRes.status)
-        }
+      if (!ticketsRes.ok || !statsRes.ok) {
+        const errText = await ticketsRes.text().catch(() => "Error");
+        throw new Error(`HTTP ${ticketsRes.status}: ${errText}`);
+      }
 
-        setTickets(ticketsData)
-        setRecentQueries(queriesData)
+      const ticketsData: Ticket[] = await ticketsRes.json();
+      const stats = await statsRes.json();
 
-        setStats({
-          totalUsers: stats.totalUsers || 0,
-          activeChats: stats.totalChats || 0,
-          criticalTickets: stats.criticalTickets || 0,
-          resolvedToday: stats.resolvedToday || 0,
-          totalTickets: stats.totalTickets || 0,
-        })
+      let queriesData: RecentQuery[] = [];
+      if (queriesRes.ok) {
+        queriesData = await queriesRes.json();
+        console.log("📊 Consultas recientes cargadas:", queriesData.length);
+      } else {
+        console.error("Error cargando consultas:", queriesRes.status);
+      }
 
-        const weeklyData: WeeklyData[] = (stats.weeklyTickets || []).map((d: { name: string; tickets: number }) => ({
+      setTickets(ticketsData);
+
+      setRecentQueries(queriesData);
+
+      setStats({
+        totalUsers: stats.totalUsers || 0,
+        activeChats: stats.totalChats || 0,
+        criticalTickets: stats.criticalTickets || 0,
+        resolvedToday: stats.resolvedToday || 0,
+        totalTickets: stats.totalTickets || 0,
+      });
+
+      const weeklyData: WeeklyData[] = (stats.weeklyTickets || []).map(
+        (d: { name: string; tickets: number }) => ({
           ...d,
           consultas: 40 + Math.floor(Math.random() * 60),
-        }))
-
-        setChartData({
-          weekly: weeklyData,
-          categories: stats.categories || [],
         })
-      } catch (err) {
-        console.error("Error cargando dashboard:", err)
-        setStats({ totalUsers: 0, activeChats: 0, criticalTickets: 0, resolvedToday: 0, totalTickets: 0 })
-      } finally {
-        setLoading(false)
-      }
-    }
+      );
 
-    fetchData()
-    const interval = setInterval(fetchData, 30000)
-    return () => clearInterval(interval)
-  }, [])
+      setChartData({
+        weekly: weeklyData,
+        categories: stats.categories || [],
+      });
+    } catch (err) {
+      console.error("Error cargando dashboard:", err);
+      setStats({
+        totalUsers: 0,
+        activeChats: 0,
+        criticalTickets: 0,
+        resolvedToday: 0,
+        totalTickets: 0,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+    const interval = setInterval(fetchDashboardData, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleUpdateTicket = async (id: number, estado: string) => {
-    try {
-      const token = localStorage.getItem("token") || ""
-      const headers: HeadersInit = {
-        "Content-Type": "application/json",
-      }
-      if (token) {
-        headers.Authorization = `Bearer ${token}`
-      }
-
-      const res = await fetch(`/api/tickets/${id}`, {
-        method: "PUT",
-        headers,
-        body: JSON.stringify({ estado }),
-      })
-
-      if (!res.ok) throw new Error("Error actualizando ticket")
-
-      setTickets(tickets.map(t => t.id === id ? { ...t, estado } : t))
-      setSelectedTicket(null)
-    } catch (err) {
-      console.error("Error:", err)
-      alert("No se pudo actualizar el ticket")
+  try {
+    const token = localStorage.getItem("authToken") || "";
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
+
+    const res = await fetch(`/api/tickets/${id}`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({ estado }),
+    });
+
+    if (!res.ok) throw new Error("Error actualizando ticket");
+
+    const data = await res.json();
+
+    const updatedTicket: Ticket = data.ticket;
+
+    setTickets((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, estado: updatedTicket.estado } : t))
+    );
+
+    setSelectedTicket(null);
+
+    if (estado === "resuelto") {
+      setSuccessMessage(`Ticket ${updatedTicket.ticketId} resuelto exitosamente`);
+      await fetchDashboardData();
+    }
+  } catch (err) {
+    console.error("Error:", err);
+    setSuccessMessage(null);
+    alert("No se pudo actualizar el ticket");
   }
+};
 
   const handleDeleteTicket = async (id: number) => {
-    if (!confirm("¿Seguro que quieres eliminar este ticket?")) return
+    if (!confirm("¿Seguro que quieres eliminar este ticket?")) return;
 
     try {
-      const token = localStorage.getItem("token") || ""
+      const token = localStorage.getItem("authToken") || "";
       const headers: HeadersInit = {
         "Content-Type": "application/json",
-      }
+      };
       if (token) {
-        headers.Authorization = `Bearer ${token}`
+        headers.Authorization = `Bearer ${token}`;
       }
 
       const res = await fetch(`/api/tickets/${id}`, {
         method: "DELETE",
         headers,
-      })
+      });
 
-      if (!res.ok) throw new Error("Error eliminando ticket")
+      if (!res.ok) throw new Error("Error eliminando ticket");
 
-      setTickets(tickets.filter(t => t.id !== id))
-      setSelectedTicket(null)
+      setTickets(tickets.filter(t => t.id !== id));
+      setSelectedTicket(null);
+      await fetchDashboardData();
     } catch (err) {
-      console.error("Error:", err)
-      alert("No se pudo eliminar el ticket")
+      console.error("Error:", err);
+      alert("No se pudo eliminar el ticket");
     }
-  }
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'critical': return 'bg-destructive text-destructive-foreground';
-      case 'high': return 'bg-warning text-warning-foreground';
-      case 'medium': return 'bg-accent text-accent-foreground';
-      default: return 'bg-muted text-muted-foreground';
+      case "critical":
+        return "bg-destructive text-destructive-foreground";
+      case "high":
+        return "bg-warning text-warning-foreground";
+      case "medium":
+        return "bg-accent text-accent-foreground";
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'open': return 'bg-destructive/10 text-destructive border-destructive/20';
-      case 'in-progress': return 'bg-warning/10 text-warning border-warning/20';
-      case 'resolved': return 'bg-success/10 text-success border-success/20';
-      default: return 'bg-muted/10 text-muted-foreground border-muted/20';
+      case "open":
+        return "bg-destructive/10 text-destructive border-destructive/20";
+      case "in-progress":
+        return "bg-warning/10 text-warning border-warning/20";
+      case "resolved":
+        return "bg-success/10 text-success border-success/20";
+      default:
+        return "bg-muted/10 text-muted-foreground border-muted/20";
     }
   };
 
   const getEstadoBadgeColor = (estado: string) => {
     const estadoLower = estado.toLowerCase();
-    if (estadoLower === 'resuelto' || estadoLower === 'resolved') {
-      return 'bg-success/10 text-success border-success/20';
-    } else if (estadoLower === 'en_proceso' || estadoLower === 'en proceso') {
-      return 'bg-warning/10 text-warning border-warning/20';
+    if (estadoLower === "resuelto" || estadoLower === "resolved") {
+      return "bg-success/10 text-success border-success/20";
+    } else if (estadoLower === "en_proceso" || estadoLower === "en proceso") {
+      return "bg-warning/10 text-warning border-warning/20";
     } else {
-      return 'bg-destructive/10 text-destructive border-destructive/20';
+      return "bg-destructive/10 text-destructive border-destructive/20";
     }
   };
 
-  const formatTime = (d: Date) => d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
+  const formatTime = (d: Date) =>
+    d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
 
-
-  const filteredAdmins = admins.filter(a =>
-    a.nombre.toLowerCase().includes(adminSearch.toLowerCase()) ||
-    a.email.toLowerCase().includes(adminSearch.toLowerCase())
+  const filteredAdmins = admins.filter(
+    (a) =>
+      a.nombre.toLowerCase().includes(adminSearch.toLowerCase()) ||
+      a.email.toLowerCase().includes(adminSearch.toLowerCase())
   );
 
-  const filteredPending = pendingUsers.filter(u =>
-    u.nombre.toLowerCase().includes(pendingSearch.toLowerCase()) ||
-    u.email.toLowerCase().includes(pendingSearch.toLowerCase())
+  const filteredPending = pendingUsers.filter(
+    (u) =>
+      u.nombre.toLowerCase().includes(pendingSearch.toLowerCase()) ||
+      u.email.toLowerCase().includes(pendingSearch.toLowerCase())
   );
 
-  const adminTotalPages = Math.max(1, Math.ceil(filteredAdmins.length / 5));
-  const pendingTotalPages = Math.max(1, Math.ceil(filteredPending.length / 5));
+  const adminTotalPages = Math.max(1, Math.ceil(filteredAdmins.length / pageSize));
+  const pendingTotalPages = Math.max(
+    1,
+    Math.ceil(filteredPending.length / pageSize)
+  );
 
-  const paginatedAdmins = filteredAdmins.slice((adminPage - 1) * 5, adminPage * 5);
-  const paginatedPending = filteredPending.slice((pendingPage - 1) * 5, pendingPage * 5);
+  const paginatedAdmins = filteredAdmins.slice(
+    (adminPage - 1) * pageSize,
+    adminPage * pageSize
+  );
+  const paginatedPending = filteredPending.slice(
+    (pendingPage - 1) * pageSize,
+    pendingPage * pageSize
+  );
 
   useEffect(() => {
     setAdminPage(1);
@@ -400,55 +449,94 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
     setSettingsMenuOpen(false);
   };
 
-  const handleChangeUserRole = (userId: number, newRole: "admin" | "cliente") => {
-  setPendingUsers(prev =>
-    prev.map(u => u.id === userId ? { ...u, rol: newRole } : u)
-  );
+  const handleOpenEditProfileModal = () => {
+    setEditProfileModalOpen(true);
+    setSettingsMenuOpen(false);
+  };
 
-  const user = pendingUsers.find(u => u.id === userId);
-  if (user && newRole === "admin") {
-    setAdmins(prev => [
-      ...prev,
-      { id: user.id, nombre: user.nombre, email: user.email, rol: "admin", creadoEl: user.creadoEl }
-    ]);
-  }
-};
+  const handleChangeUserRole = (userId: number, newRole: "admin" | "cliente") => {
+    setPendingUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, rol: newRole } : u))
+    );
+
+    const user = pendingUsers.find((u) => u.id === userId);
+    if (user && newRole === "admin") {
+      setAdmins((prev) => [
+        ...prev,
+        {
+          id: user.id,
+          nombre: user.nombre,
+          email: user.email,
+          rol: "admin",
+          creadoEl: user.creadoEl,
+        },
+      ]);
+    }
+  };
 
   const handleApproveAndMakeAdmin = (userId: number) => {
-  const user = pendingUsers.find(u => u.id === userId);
-  if (user) {
-    setAdmins(prev => [
-      ...prev,
-      { id: user.id, nombre: user.nombre, email: user.email, rol: "admin", creadoEl: user.creadoEl }
-    ]);
-  }
-  setPendingUsers(prev => prev.filter(u => u.id !== userId));
-};
+    const user = pendingUsers.find((u) => u.id === userId);
+    if (user) {
+      setAdmins((prev) => [
+        ...prev,
+        {
+          id: user.id,
+          nombre: user.nombre,
+          email: user.email,
+          rol: "admin",
+          creadoEl: user.creadoEl,
+        },
+      ]);
+    }
+    setPendingUsers((prev) => prev.filter((u) => u.id !== userId));
+  };
 
-const handleApproveAsClient = (userId: number) => {
-  setPendingUsers(prev => prev.filter(u => u.id !== userId));
-};
+  const handleApproveAsClient = (userId: number) => {
+    setPendingUsers((prev) => prev.filter((u) => u.id !== userId));
+  };
+
+  const sortedTickets = [...tickets].sort((a, b) => {
+  const aResolved = a.estado.toLowerCase() === "resuelto";
+  const bResolved = b.estado.toLowerCase() === "resuelto";
+
+  if (aResolved === bResolved) {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  }
+
+  if (aResolved) return 1;
+  if (bResolved) return -1;
+  return 0;
+});
+
+const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-background">
-      <Dialog open={!!selectedTicket} onOpenChange={() => setSelectedTicket(null)}>
+      <Dialog
+        open={!!selectedTicket}
+        onOpenChange={() => setSelectedTicket(null)}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               Ticket {selectedTicket?.ticketId}
-              <DialogClose>
-              </DialogClose>
+              <DialogClose></DialogClose>
             </DialogTitle>
           </DialogHeader>
           {selectedTicket && (
             <div className="space-y-4">
               <div>
                 <p className="text-sm font-medium">Cliente:</p>
-                <p className="text-sm">{selectedTicket.user?.nombre || selectedTicket.clienteNombre}</p>
+                <p className="text-sm">
+                  {selectedTicket.user?.nombre || selectedTicket.clienteNombre}
+                </p>
               </div>
               <div>
                 <p className="text-sm font-medium">Email:</p>
-                <p className="text-sm">{selectedTicket.user?.email || "No disponible"}</p>
+                <p className="text-sm">
+                  {selectedTicket.user?.email || "No disponible"}
+                </p>
               </div>
               <div>
                 <p className="text-sm font-medium">Asunto:</p>
@@ -460,25 +548,43 @@ const handleApproveAsClient = (userId: number) => {
               </div>
               <div>
                 <p className="text-sm font-medium">Prioridad:</p>
-                <Badge className={getPriorityColor(selectedTicket.prioridad === "crítica" ? "critical" : "high")}>
+                <Badge
+                  className={getPriorityColor(
+                    selectedTicket.prioridad === "crítica" ? "critical" : "high"
+                  )}
+                >
                   {selectedTicket.prioridad}
                 </Badge>
               </div>
               <div>
                 <p className="text-sm font-medium">Estado:</p>
-                <Badge className={getStatusColor(selectedTicket.estado === "pendiente" ? "open" : "in-progress")}>
+                <Badge
+                  className={getEstadoBadgeColor(selectedTicket.estado)}
+                >
                   {selectedTicket.estado}
                 </Badge>
               </div>
               <div>
                 <p className="text-sm font-medium">Creado:</p>
-                <p className="text-sm">{new Date(selectedTicket.createdAt).toLocaleString("es-ES")}</p>
+                <p className="text-sm">
+                  {new Date(selectedTicket.createdAt).toLocaleString("es-ES")}
+                </p>
               </div>
               <div className="flex justify-end space-x-2">
-                <Button variant="ghost" size="icon" onClick={() => handleUpdateTicket(selectedTicket.id, "resuelto")}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() =>
+                    handleUpdateTicket(selectedTicket.id, "resuelto")
+                  }
+                >
                   <Check className="h-4 w-4 text-success" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleDeleteTicket(selectedTicket.id)}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDeleteTicket(selectedTicket.id)}
+                >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
@@ -500,7 +606,7 @@ const handleApproveAsClient = (userId: number) => {
                 placeholder="Buscar por nombre o email..."
                 className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/60"
                 value={adminSearch}
-                onChange={e => setAdminSearch(e.target.value)}
+                onChange={(e) => setAdminSearch(e.target.value)}
               />
             </div>
 
@@ -515,13 +621,15 @@ const handleApproveAsClient = (userId: number) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedAdmins.map(admin => (
+                  {paginatedAdmins.map((admin) => (
                     <tr key={admin.id} className="border-t border-border/40">
                       <td className="px-3 py-2">{admin.nombre}</td>
                       <td className="px-3 py-2">{admin.email}</td>
                       <td className="px-3 py-2">
                         <Badge variant="outline" className="text-xs">
-                          {admin.rol === "admin" ? "Administrador" : "Cliente"}
+                          {admin.rol === "admin"
+                            ? "Administrador"
+                            : "Cliente"}
                         </Badge>
                       </td>
                       <td className="px-3 py-2">
@@ -532,7 +640,10 @@ const handleApproveAsClient = (userId: number) => {
 
                   {paginatedAdmins.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-3 py-4 text-center text-muted-foreground text-sm">
+                      <td
+                        colSpan={4}
+                        className="px-3 py-4 text-center text-muted-foreground text-sm"
+                      >
                         No se encontraron administradores.
                       </td>
                     </tr>
@@ -549,7 +660,7 @@ const handleApproveAsClient = (userId: number) => {
                 variant="outline"
                 size="icon"
                 disabled={adminPage === 1}
-                onClick={() => setAdminPage(p => Math.max(1, p - 1))}
+                onClick={() => setAdminPage((p) => Math.max(1, p - 1))}
               >
                 ‹
               </Button>
@@ -557,7 +668,9 @@ const handleApproveAsClient = (userId: number) => {
                 variant="outline"
                 size="icon"
                 disabled={adminPage === adminTotalPages}
-                onClick={() => setAdminPage(p => Math.min(adminTotalPages, p + 1))}
+                onClick={() =>
+                  setAdminPage((p) => Math.min(adminTotalPages, p + 1))
+                }
               >
                 ›
               </Button>
@@ -579,7 +692,7 @@ const handleApproveAsClient = (userId: number) => {
                 placeholder="Buscar por nombre o email..."
                 className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/60"
                 value={pendingSearch}
-                onChange={e => setPendingSearch(e.target.value)}
+                onChange={(e) => setPendingSearch(e.target.value)}
               />
             </div>
 
@@ -591,48 +704,49 @@ const handleApproveAsClient = (userId: number) => {
                     <th className="text-left px-3 py-2">Email</th>
                     <th className="text-left px-3 py-2">Creado el</th>
                     <th className="px-3 py-2">
-                    <div className="flex justify-center">
-                      Acciones
-                    </div>
-                  </th>
+                      <div className="flex justify-center">Acciones</div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-  {paginatedPending.map(user => (
-    <tr key={user.id} className="border-t border-border/40">
-      <td className="px-3 py-2">{user.nombre}</td>
-      <td className="px-3 py-2">{user.email}</td>
-      <td className="px-3 py-2">
-        {new Date(user.creadoEl).toLocaleDateString("es-PE")}
-      </td>
-      <td className="px-3 py-2 text-right space-x-2">
-        <Button
-          size="sm"
-          variant="outline"
-          className="text-xs"
-          onClick={() => handleApproveAsClient(user.id)}
-        >
-          Aprobar como cliente
-        </Button>
-        <Button
-          size="sm"
-          className="text-xs"
-          onClick={() => handleApproveAndMakeAdmin(user.id)}
-        >
-          Aprobar como admin
-        </Button>
-      </td>
-    </tr>
-  ))}
+                  {paginatedPending.map((user) => (
+                    <tr key={user.id} className="border-t border-border/40">
+                      <td className="px-3 py-2">{user.nombre}</td>
+                      <td className="px-3 py-2">{user.email}</td>
+                      <td className="px-3 py-2">
+                        {new Date(user.creadoEl).toLocaleDateString("es-PE")}
+                      </td>
+                      <td className="px-3 py-2 text-right space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs"
+                          onClick={() => handleApproveAsClient(user.id)}
+                        >
+                          Aprobar como cliente
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => handleApproveAndMakeAdmin(user.id)}
+                        >
+                          Aprobar como admin
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
 
-  {paginatedPending.length === 0 && (
-    <tr>
-      <td colSpan={4} className="px-3 py-4 text-center text-muted-foreground text-sm">
-        No hay cuentas pendientes.
-      </td>
-    </tr>
-  )}
-</tbody>
+                  {paginatedPending.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-3 py-4 text-center text-muted-foreground text-sm"
+                      >
+                        No hay cuentas pendientes.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
               </table>
             </div>
 
@@ -644,7 +758,7 @@ const handleApproveAsClient = (userId: number) => {
                 variant="outline"
                 size="icon"
                 disabled={pendingPage === 1}
-                onClick={() => setPendingPage(p => Math.max(1, p - 1))}
+                onClick={() => setPendingPage((p) => Math.max(1, p - 1))}
               >
                 ‹
               </Button>
@@ -652,7 +766,9 @@ const handleApproveAsClient = (userId: number) => {
                 variant="outline"
                 size="icon"
                 disabled={pendingPage === pendingTotalPages}
-                onClick={() => setPendingPage(p => Math.min(pendingTotalPages, p + 1))}
+                onClick={() =>
+                  setPendingPage((p) => Math.min(pendingTotalPages, p + 1))
+                }
               >
                 ›
               </Button>
@@ -660,6 +776,127 @@ const handleApproveAsClient = (userId: number) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={editProfileModalOpen} onOpenChange={setEditProfileModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar mi perfil</DialogTitle>
+          </DialogHeader>
+
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              alert("Datos actualizados (solo frontend)");
+              setEditProfileModalOpen(false);
+            }}
+          >
+            <div className="space-y-1">
+              <label
+                htmlFor="edit-name"
+                className="text-sm font-medium"
+              >
+                Nombre
+              </label>
+              <input
+                id="edit-name"
+                type="text"
+                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/60"
+                value={currentAdmin.nombre}
+                placeholder="Ingresa tu nombre"
+                aria-label="Nombre del administrador"
+                onChange={(e) =>
+                  setCurrentAdmin((prev) => ({
+                    ...prev,
+                    nombre: e.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label
+                htmlFor="edit-email"
+                className="text-sm font-medium"
+              >
+                Email
+              </label>
+              <input
+                id="edit-email"
+                type="email"
+                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/60"
+                value={currentAdmin.email}
+                placeholder="Ingresa tu email"
+                aria-label="Email del administrador"
+                onChange={(e) =>
+                  setCurrentAdmin((prev) => ({
+                    ...prev,
+                    email: e.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label
+                htmlFor="edit-password"
+                className="text-sm font-medium"
+              >
+                Nueva contraseña
+              </label>
+              <input
+                id="edit-password"
+                type="password"
+                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/60"
+                value={currentAdmin.password}
+                placeholder="Deja vacío para no cambiarla"
+                aria-label="Nueva contraseña del administrador"
+                onChange={(e) =>
+                  setCurrentAdmin((prev) => ({
+                    ...prev,
+                    password: e.target.value,
+                  }))
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                Si la dejas vacía, se mantiene la contraseña actual (demo).
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditProfileModalOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit">Guardar cambios</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!successMessage} onOpenChange={() => setSuccessMessage(null)}>
+  <DialogContent className="max-w-sm text-center">
+    <DialogHeader>
+      <DialogTitle className="flex items-center justify-center gap-2">
+        <CheckCircle className="h-5 w-5 text-success" />
+        Ticket resuelto
+      </DialogTitle>
+    </DialogHeader>
+
+    <p className="text-sm text-muted-foreground mt-2">
+      {successMessage}
+    </p>
+
+    <div className="mt-4 flex justify-center">
+      <Button onClick={() => setSuccessMessage(null)}>
+        Aceptar
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
 
       <header className="sticky top-0 z-10 border-b border-border/50 bg-card/30 backdrop-blur-sm">
         <div className="flex items-center justify-between p-4">
@@ -671,7 +908,7 @@ const handleApproveAsClient = (userId: number) => {
               <h1 className="text-xl font-bold text-gradient">Dashboard Admin</h1>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-3">
             <Button variant="ghost" size="sm">
               <Bell className="h-4 w-4" />
@@ -681,13 +918,13 @@ const handleApproveAsClient = (userId: number) => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setSettingsMenuOpen(prev => !prev)}
+                onClick={() => setSettingsMenuOpen((prev) => !prev)}
               >
                 <Settings className="h-4 w-4" />
               </Button>
 
               {settingsMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-md border border-border/60 bg-card shadow-lg z-20">
+                <div className="absolute right-0 mt-2 w-52 rounded-md border border-border/60 bg-card shadow-lg z-20">
                   <button
                     className="w-full text-left px-3 py-2 text-sm hover:bg-accent/40 transition-colors"
                     onClick={handleOpenAdminsModal}
@@ -699,6 +936,12 @@ const handleApproveAsClient = (userId: number) => {
                     onClick={handleOpenPendingModal}
                   >
                     Cuentas por aprobar
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent/40 transition-colors border-t border-border/40"
+                    onClick={handleOpenEditProfileModal}
+                  >
+                    Editar mi perfil
                   </button>
                 </div>
               )}
@@ -723,31 +966,42 @@ const handleApproveAsClient = (userId: number) => {
         <div className="p-6">
           {loading ? (
             <div className="flex-1 flex items-center justify-center h-96">
-              <div className="text-muted-foreground">Cargando datos del dashboard...</div>
+              <div className="text-muted-foreground">
+                Cargando datos del dashboard...
+              </div>
             </div>
           ) : (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="glass-effect border-border/50">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Usuarios Activos</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Usuarios Activos
+                    </CardTitle>
                     <Users className="h-4 w-4 text-primary" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
+                    <div className="text-2xl font-bold">
+                      {stats.totalUsers.toLocaleString()}
+                    </div>
                     <p className="text-xs text-muted-foreground">
-                      <span className="text-success">+12%</span> desde el mes pasado
+                      <span className="text-success">+12%</span> desde el mes
+                      pasado
                     </p>
                   </CardContent>
                 </Card>
 
                 <Card className="glass-effect border-border/50">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Chats Activos</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Chats Activos
+                    </CardTitle>
                     <MessageSquare className="h-4 w-4 text-accent" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stats.activeChats}</div>
+                    <div className="text-2xl font-bold">
+                      {stats.activeChats}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       <span className="text-success">+5%</span> vs ayer
                     </p>
@@ -756,11 +1010,15 @@ const handleApproveAsClient = (userId: number) => {
 
                 <Card className="glass-effect border-border/50">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Tickets Generados</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Tickets Generados
+                    </CardTitle>
                     <AlertTriangle className="h-4 w-4 text-warning" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-warning">{stats.totalTickets}</div>
+                    <div className="text-2xl font-bold text-warning">
+                      {stats.totalTickets}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       Requieren atención inmediata
                     </p>
@@ -769,11 +1027,15 @@ const handleApproveAsClient = (userId: number) => {
 
                 <Card className="glass-effect border-border/50">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Resueltos Hoy</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Resueltos Hoy
+                    </CardTitle>
                     <CheckCircle className="h-4 w-4 text-success" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-success">{stats.resolvedToday}</div>
+                    <div className="text-2xl font-bold text-success">
+                      {stats.resolvedToday}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       Meta: 50 tickets
                     </p>
@@ -788,23 +1050,39 @@ const handleApproveAsClient = (userId: number) => {
                       <TrendingUp className="h-5 w-5" />
                       <span>Actividad Semanal</span>
                     </CardTitle>
-                    <CardDescription>Consultas y tickets por día</CardDescription>
+                    <CardDescription>
+                      Consultas y tickets por día
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={chartData.weekly}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                        <YAxis stroke="hsl(var(--muted-foreground))" />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: 'hsl(var(--card))', 
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px'
-                          }} 
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="hsl(var(--border))"
                         />
-                        <Bar dataKey="consultas" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="tickets" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+                        <XAxis
+                          dataKey="name"
+                          stroke="hsl(var(--muted-foreground))"
+                        />
+                        <YAxis stroke="hsl(var(--muted-foreground))" />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "8px",
+                          }}
+                        />
+                        <Bar
+                          dataKey="consultas"
+                          fill="hsl(var(--primary))"
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="tickets"
+                          fill="hsl(var(--accent))"
+                          radius={[4, 4, 0, 0]}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>
@@ -825,28 +1103,53 @@ const handleApproveAsClient = (userId: number) => {
                   <CardContent>
                     <ScrollArea className="h-80">
                       <div className="space-y-4">
-                        {tickets.slice(0, 5).map((ticket) => (
-                          <div key={ticket.id} className="border border-border/50 rounded-lg p-3 space-y-3">
+                        {sortedTickets.slice(0, 5).map((ticket) => (
+                          <div
+                            key={ticket.id}
+                            className="border border-border/50 rounded-lg p-3 space-y-3"
+                          >
                             <div className="flex items-start justify-between gap-2">
-                              <h4 className="font-medium text-sm flex-1 line-clamp-2 pr-2">{ticket.detalle}</h4>
-                              <Badge variant="outline" className={`${getEstadoBadgeColor(ticket.estado)} shrink-0`}>
+                              <h4 className="font-medium text-sm flex-1 line-clamp-2 pr-2">
+                                {ticket.detalle}
+                              </h4>
+                              <Badge
+                                variant="outline"
+                                className={`${getEstadoBadgeColor(
+                                  ticket.estado
+                                )} shrink-0`}
+                              >
                                 {ticket.estado}
                               </Badge>
                             </div>
                             <div className="flex items-center justify-between">
-                              <p className="text-xs text-muted-foreground">{ticket.user?.nombre || ticket.clienteNombre}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {ticket.user?.nombre ||
+                                  ticket.clienteNombre}
+                              </p>
                               <div className="flex items-center text-xs text-muted-foreground">
                                 <Clock className="h-3 w-3 mr-1" />
-                                <span>{new Date(ticket.createdAt).toLocaleDateString("es-ES", {
-                                  day: "2-digit",
-                                  month: "2-digit"
-                                })} {new Date(ticket.createdAt).toLocaleTimeString("es-ES", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}</span>
+                                <span>
+                                  {new Date(
+                                    ticket.createdAt
+                                  ).toLocaleDateString("es-ES", {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                  })}{" "}
+                                  {new Date(
+                                    ticket.createdAt
+                                  ).toLocaleTimeString("es-ES", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </span>
                               </div>
                             </div>
-                            <Button size="sm" variant="outline" className="w-full" onClick={() => setSelectedTicket(ticket)}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full"
+                              onClick={() => setSelectedTicket(ticket)}
+                            >
                               Ver Ticket
                             </Button>
                           </div>
@@ -861,7 +1164,9 @@ const handleApproveAsClient = (userId: number) => {
                 <Card className="glass-effect border-border/50">
                   <CardHeader>
                     <CardTitle>Últimas Consultas</CardTitle>
-                    <CardDescription>Conversaciones recientes de los usuarios</CardDescription>
+                    <CardDescription>
+                      Conversaciones recientes de los usuarios
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ScrollArea className="h-[350px]">
@@ -879,36 +1184,47 @@ const handleApproveAsClient = (userId: number) => {
                                   ? "border-primary/50 bg-primary/5"
                                   : "border-border/40 bg-card/50 hover:bg-card/70"
                               }`}
-                              onMouseEnter={() => setHoveredQuery(query.id)}
-                              onMouseLeave={() => setHoveredQuery(null)}
+                              onMouseEnter={() =>
+                                setHoveredQuery(query.id)
+                              }
+                              onMouseLeave={() =>
+                                setHoveredQuery(null)
+                              }
                             >
                               <CardContent className="p-4">
                                 <div className="flex items-start gap-3">
                                   <Avatar className="h-10 w-10 flex-shrink-0">
                                     <AvatarFallback className="bg-gradient-to-br from-purple-600 to-pink-600 text-white font-bold">
-                                      {query.userName.charAt(0).toUpperCase()}
+                                      {query.userName
+                                        .charAt(0)
+                                        .toUpperCase()}
                                     </AvatarFallback>
                                   </Avatar>
-                                  
+
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between mb-1">
                                       <p className="text-sm font-semibold text-foreground truncate">
                                         {query.userName}
                                       </p>
                                       <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
-                                        {formatTime(new Date(query.timestamp))}
+                                        {formatTime(
+                                          new Date(query.timestamp)
+                                        )}
                                       </span>
                                     </div>
-                                    
+
                                     <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                                       {query.content}
                                     </p>
-                                    
+
                                     <div className="flex items-center justify-between">
                                       <span className="text-xs text-muted-foreground">
                                         Chat #{query.chatId}
                                       </span>
-                                      <Badge variant="outline" className="text-xs">
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs"
+                                      >
                                         <MessageSquare className="h-3 w-3 mr-1" />
                                         Consulta
                                       </Badge>
@@ -927,7 +1243,9 @@ const handleApproveAsClient = (userId: number) => {
                 <Card className="glass-effect border-border/50">
                   <CardHeader>
                     <CardTitle>Distribución por Categorías</CardTitle>
-                    <CardDescription>Tipos de consultas más frecuentes</CardDescription>
+                    <CardDescription>
+                      Tipos de consultas más frecuentes
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-center h-[350px]">
@@ -940,10 +1258,15 @@ const handleApproveAsClient = (userId: number) => {
                             outerRadius={110}
                             fill="#8884d8"
                             dataKey="value"
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            label={({ name, percent }) =>
+                              `${name} ${(percent * 100).toFixed(0)}%`
+                            }
                           >
                             {chartData.categories.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={entry.color}
+                              />
                             ))}
                           </Pie>
                           <Tooltip />

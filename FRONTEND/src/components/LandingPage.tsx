@@ -15,22 +15,29 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
 
 
   useEffect(() => {
-    setIsVisible(true);
+  setIsVisible(true);
+  
+  const handleScroll = () => {
+    const sections = document.querySelectorAll('.section-container');
+    const scrollPosition = window.scrollY + window.innerHeight / 3;
     
-    const handleScroll = () => {
-      const sections = document.querySelectorAll('.section-container');
-      sections.forEach((section, index) => {
-        const rect = section.getBoundingClientRect();
-        if (rect.top >= 0 && rect.top <= window.innerHeight / 2) {
-          setActiveSection(index);
-        }
-      });
-    };
+    sections.forEach((section, index) => {
+      const rect = section.getBoundingClientRect();
+      const sectionTop = rect.top + window.scrollY;
+      const sectionBottom = sectionTop + rect.height;
+      
+      if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+        setActiveSection(index);
+      }
+    });
+  };
 
+  handleScroll();
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  window.addEventListener('scroll', handleScroll);
+  return () => window.removeEventListener('scroll', handleScroll);
+}, []);
+
 
 
   const scrollToSection = (index: number) => {
