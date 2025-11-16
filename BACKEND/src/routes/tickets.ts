@@ -150,6 +150,28 @@ router.get(
       })
     );
 
+    const weeklyQueries = await Promise.all(
+      last7Days.map(async (date) => {
+        const nextDay = new Date(date);
+        nextDay.setDate(nextDay.getDate() + 1);
+
+        const count = await prisma.message.count({
+          where: {
+            sender: "user",
+            timestamp: { gte: date, lt: nextDay },
+          },
+        });
+
+        const dayName = date.toLocaleDateString("es-ES", { weekday: "short" });
+        return {
+          name: dayName.charAt(0).toUpperCase() + dayName.slice(1, 3),
+          consultas: count,
+        };
+      })
+    );
+
+    console.log("📊 weeklyQueries:", weeklyQueries);
+
     const tickets = await prisma.ticket.findMany({
       select: { detalle: true },
     });
@@ -195,6 +217,7 @@ router.get(
       resolvedToday,
       totalTickets,
       weeklyTickets,
+      weeklyQueries,
       categories,
     });
   })

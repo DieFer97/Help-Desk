@@ -273,17 +273,21 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         (stats.totalTickets || 0) - (stats.resolvedToday || 0);
       setNotificationCount(pendingToday);
 
-      const weeklyData: WeeklyData[] = (stats.weeklyTickets || []).map(
-        (d: { name: string; tickets: number }) => ({
-          ...d,
-          consultas: 40 + Math.floor(Math.random() * 60),
-        })
-      );
+      const weeklyTickets = stats.weeklyTickets || [];
+const weeklyQueries = stats.weeklyQueries || [];
 
-      setChartData({
-        weekly: weeklyData,
-        categories: stats.categories || [],
-      });
+const weeklyData: WeeklyData[] = weeklyTickets.map(
+  (d: { name: string; tickets: number }, index: number) => ({
+    name: d.name,
+    tickets: d.tickets,
+    consultas: weeklyQueries[index]?.consultas ?? 0,
+  })
+);
+
+setChartData({
+  weekly: weeklyData,
+  categories: stats.categories || [],
+});
     } catch (err) {
       console.error("Error cargando dashboard:", err);
       setStats({
@@ -1073,16 +1077,8 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                             borderRadius: "8px",
                           }}
                         />
-                        <Bar
-                          dataKey="consultas"
-                          fill="hsl(var(--primary))"
-                          radius={[4, 4, 0, 0]}
-                        />
-                        <Bar
-                          dataKey="tickets"
-                          fill="hsl(var(--accent))"
-                          radius={[4, 4, 0, 0]}
-                        />
+                        <Bar dataKey="consultas" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="tickets" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>

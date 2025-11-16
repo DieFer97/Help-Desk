@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Award, Brain, CheckCircle2, Layers, MessageSquare, Rocket, Sparkles, Star, TrendingUp, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
-import { SiExpress, SiN8N, SiOllama, SiPostgresql, SiPrisma, SiReact, SiTypescript } from "react-icons/si";
+import { SiExpress, SiN8N, SiOllama, SiPostgresql, SiPrisma, SiReact, SiTwilio, SiTypescript, SiVite } from "react-icons/si";
+
 
 
 interface LandingPageProps {
@@ -9,34 +10,37 @@ interface LandingPageProps {
 }
 
 
+
 const LandingPage = ({ onStartLogin }: LandingPageProps) => {
   const [activeSection, setActiveSection] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
 
 
+
   useEffect(() => {
-  setIsVisible(true);
-  
-  const handleScroll = () => {
-    const sections = document.querySelectorAll('.section-container');
-    const scrollPosition = window.scrollY + window.innerHeight / 3;
+    setIsVisible(true);
     
-    sections.forEach((section, index) => {
-      const rect = section.getBoundingClientRect();
-      const sectionTop = rect.top + window.scrollY;
-      const sectionBottom = sectionTop + rect.height;
+    const handleScroll = () => {
+      const sections = document.querySelectorAll('.section-container');
+      const scrollPosition = window.scrollY + window.innerHeight / 3;
       
-      if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
-        setActiveSection(index);
-      }
-    });
-  };
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = rect.top + window.scrollY;
+        const sectionBottom = sectionTop + rect.height;
+        
+        if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+          setActiveSection(index);
+        }
+      });
+    };
 
-  handleScroll();
+    handleScroll();
 
-  window.addEventListener('scroll', handleScroll);
-  return () => window.removeEventListener('scroll', handleScroll);
-}, []);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
 
 
 
@@ -44,6 +48,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
     const sections = document.querySelectorAll('.section-container');
     sections[index]?.scrollIntoView({ behavior: 'smooth' });
   };
+
 
 
   const technologies = [
@@ -103,7 +108,24 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
       borderColor: "border-gray-500/30",
       iconColor: "text-gray-200"
     },
+    { 
+      icon: SiVite, 
+      name: "Vite", 
+      description: "Build tool ultrarrápido", 
+      bgColor: "bg-purple-500/10", 
+      borderColor: "border-purple-500/30",
+      iconColor: "text-purple-400"
+    },
+    { 
+      icon: SiTwilio, 
+      name: "Twilio", 
+      description: "Comunicaciones API", 
+      bgColor: "bg-red-500/10", 
+      borderColor: "border-red-500/30",
+      iconColor: "text-red-400"
+    },
   ];
+
 
 
   const features = [
@@ -142,6 +164,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
   ];
 
 
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden opacity-30">
@@ -152,6 +175,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
       </div>
 
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
+
 
 
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-2xl bg-slate-950/70 border-b border-white/10 shadow-2xl">
@@ -175,6 +199,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
           </div>
 
 
+
           <div className="hidden md:flex items-center space-x-1 bg-white/5 rounded-full p-1.5 backdrop-blur-xl border border-white/10">
             {['Inicio', 'Proyecto', 'Tecnologías', 'Características'].map((item, index) => (
               <button
@@ -192,6 +217,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
           </div>
 
 
+
           <Button 
             onClick={onStartLogin}
             className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-500 hover:via-purple-500 hover:to-pink-500 text-white font-bold px-8 py-6 rounded-xl shadow-2xl shadow-purple-500/50 hover:shadow-purple-500/80 transform hover:scale-105 transition-all duration-300 border-2 border-white/20"
@@ -203,6 +229,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
           </Button>
         </div>
       </nav>
+
 
 
       <section className={`section-container min-h-screen flex items-center justify-center pt-32 px-6 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
@@ -223,6 +250,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
           </div>
 
 
+
           <h1 className="text-7xl md:text-8xl font-black mb-6 leading-tight">
             <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-2xl">
               Help Desk con IA
@@ -237,9 +265,11 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
           </div>
 
 
+
           <p className="text-xl text-slate-300 max-w-3xl mx-auto mb-12 leading-relaxed">
             Automatización avanzada con Inteligencia Artificial para transformar tu servicio de atención al cliente
           </p>
+
 
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-20">
@@ -261,6 +291,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
               Conocer Más
             </Button>
           </div>
+
 
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -297,6 +328,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
       </section>
 
 
+
       <section className="section-container min-h-screen flex items-center justify-center px-6 py-20">
         <div className="container mx-auto z-10 max-w-7xl">
           <div className="text-center mb-20 relative">
@@ -318,6 +350,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
               <div className="h-1 w-20 bg-gradient-to-l from-transparent via-purple-500 to-purple-500 rounded-full"></div>
             </div>
           </div>
+
 
 
           <div className="grid md:grid-cols-2 gap-8 mb-8">
@@ -346,6 +379,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
             </div>
 
 
+
             <div className="group relative backdrop-blur-2xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-10 rounded-3xl border-2 border-green-500/30 hover:border-green-500/50 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 shadow-2xl shadow-green-500/20">
               <div className="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-green-500/50 transform rotate-12 group-hover:rotate-0 transition-transform duration-500 border-4 border-slate-950">
                 <span className="text-3xl font-black text-white">02</span>
@@ -370,6 +404,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
               </div>
             </div>
           </div>
+
 
 
           <div className="group relative backdrop-blur-2xl bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 p-10 rounded-3xl border-2 border-blue-500/30 hover:border-blue-500/50 transition-all duration-500 shadow-2xl shadow-blue-500/20">
@@ -425,6 +460,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
       </section>
 
 
+
       <section className="section-container min-h-screen flex items-center justify-center px-6 py-20">
         <div className="container mx-auto z-10 max-w-7xl">
           <div className="text-center mb-20">
@@ -442,7 +478,8 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
           </div>
 
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16 [&>*:last-child:nth-child(3n+1)]:lg:col-start-2">
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
             {technologies.map((tech, index) => {
               const Icon = tech.icon;
               return (
@@ -470,6 +507,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
               );
             })}
           </div>
+
 
 
           <div className="relative backdrop-blur-2xl bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 p-12 rounded-3xl border-2 border-indigo-500/30 hover:border-indigo-500/50 transition-all duration-500 shadow-2xl shadow-indigo-500/20 overflow-hidden group">
@@ -514,6 +552,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
       </section>
 
 
+
       <section className="section-container min-h-screen flex items-center justify-center px-6 py-20">
         <div className="container mx-auto z-10 max-w-7xl">
           <div className="text-center mb-20">
@@ -529,6 +568,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
             </h2>
             <p className="text-2xl text-slate-300 font-semibold">Funcionalidades que transforman el soporte técnico</p>
           </div>
+
 
 
           <div className="grid md:grid-cols-2 gap-8 mb-20">
@@ -566,6 +606,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
           </div>
 
 
+
           <div className="text-center">
             <div className="relative inline-block backdrop-blur-2xl bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 p-12 rounded-3xl border-2 border-blue-500/30 hover:border-blue-500/50 mb-12 transition-all duration-500 shadow-2xl shadow-blue-500/20 group overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-purple-500/10 to-pink-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -583,12 +624,12 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
                   <div className="text-left">
                     <p className="text-2xl font-black text-white">Instituto SENATI</p>
                     <p className="text-lg text-blue-400 font-bold flex items-center gap-2">
-                    <span>Perú - 2025</span>
-                    <svg className="w-6 h-4" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
-                      <rect width="900" height="600" fill="#D91023"/>
-                      <rect x="300" width="300" height="600" fill="#FFFFFF"/>
-                    </svg>
-                  </p>
+                      <span>Perú - 2025</span>
+                      <svg className="w-7 h-5 rounded shadow-md" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="900" height="600" fill="#D91023"/>
+                        <rect x="300" width="300" height="600" fill="#FFFFFF"/>
+                      </svg>
+                    </p>
                   </div>
                 </div>
 
@@ -606,6 +647,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
             </div>
 
 
+
             <Button 
               onClick={onStartLogin}
               size="lg"
@@ -619,6 +661,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
           </div>
         </div>
       </section>
+
 
 
       <div className="fixed right-8 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col gap-4">
@@ -642,6 +685,7 @@ const LandingPage = ({ onStartLogin }: LandingPageProps) => {
     </div>
   );
 };
+
 
 
 export default LandingPage;
