@@ -220,6 +220,10 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
     password: "",
   });
 
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const [notificationCount, setNotificationCount] = useState(0);
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
@@ -255,7 +259,6 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
       }
 
       setTickets(ticketsData);
-
       setRecentQueries(queriesData);
 
       setStats({
@@ -265,6 +268,10 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         resolvedToday: stats.resolvedToday || 0,
         totalTickets: stats.totalTickets || 0,
       });
+
+      const pendingToday =
+        (stats.totalTickets || 0) - (stats.resolvedToday || 0);
+      setNotificationCount(pendingToday);
 
       const weeklyData: WeeklyData[] = (stats.weeklyTickets || []).map(
         (d: { name: string; tickets: number }) => ({
@@ -298,43 +305,44 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   }, []);
 
   const handleUpdateTicket = async (id: number, estado: string) => {
-  try {
-    const token = localStorage.getItem("authToken") || "";
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-    };
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
+    try {
+      const token = localStorage.getItem("authToken") || "";
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`/api/tickets/${id}`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({ estado }),
+      });
+
+      if (!res.ok) throw new Error("Error actualizando ticket");
+
+      const data = await res.json();
+      const updatedTicket: Ticket = data.ticket;
+
+      setTickets((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, estado: updatedTicket.estado } : t))
+      );
+
+      setSelectedTicket(null);
+
+      if (estado === "resuelto") {
+        setSuccessMessage(
+          `Ticket ${updatedTicket.ticketId} resuelto exitosamente`
+        );
+        await fetchDashboardData();
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      setSuccessMessage(null);
+      alert("No se pudo actualizar el ticket");
     }
-
-    const res = await fetch(`/api/tickets/${id}`, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify({ estado }),
-    });
-
-    if (!res.ok) throw new Error("Error actualizando ticket");
-
-    const data = await res.json();
-
-    const updatedTicket: Ticket = data.ticket;
-
-    setTickets((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, estado: updatedTicket.estado } : t))
-    );
-
-    setSelectedTicket(null);
-
-    if (estado === "resuelto") {
-      setSuccessMessage(`Ticket ${updatedTicket.ticketId} resuelto exitosamente`);
-      await fetchDashboardData();
-    }
-  } catch (err) {
-    console.error("Error:", err);
-    setSuccessMessage(null);
-    alert("No se pudo actualizar el ticket");
-  }
-};
+  };
 
   const handleDeleteTicket = async (id: number) => {
     if (!confirm("¿Seguro que quieres eliminar este ticket?")) return;
@@ -355,7 +363,7 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
       if (!res.ok) throw new Error("Error eliminando ticket");
 
-      setTickets(tickets.filter(t => t.id !== id));
+      setTickets(tickets.filter((t) => t.id !== id));
       setSelectedTicket(null);
       await fetchDashboardData();
     } catch (err) {
@@ -374,19 +382,6 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         return "bg-accent text-accent-foreground";
       default:
         return "bg-muted text-muted-foreground";
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "open":
-        return "bg-destructive/10 text-destructive border-destructive/20";
-      case "in-progress":
-        return "bg-warning/10 text-warning border-warning/20";
-      case "resolved":
-        return "bg-success/10 text-success border-success/20";
-      default:
-        return "bg-muted/10 text-muted-foreground border-muted/20";
     }
   };
 
@@ -496,20 +491,19 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   };
 
   const sortedTickets = [...tickets].sort((a, b) => {
-  const aResolved = a.estado.toLowerCase() === "resuelto";
-  const bResolved = b.estado.toLowerCase() === "resuelto";
+    const aResolved = a.estado.toLowerCase() === "resuelto";
+    const bResolved = b.estado.toLowerCase() === "resuelto";
 
-  if (aResolved === bResolved) {
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  }
+    if (aResolved === bResolved) {
+      return (
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    }
 
-  if (aResolved) return 1;
-  if (bResolved) return -1;
-  return 0;
-});
-
-const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
+    if (aResolved) return 1;
+    if (bResolved) return -1;
+    return 0;
+  });
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-background">
@@ -527,46 +521,46 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
           {selectedTicket && (
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium">Cliente:</p>
-                <p className="text-sm">
+                <p className="text-base font-medium">Cliente:</p>
+                <p className="text-base">
                   {selectedTicket.user?.nombre || selectedTicket.clienteNombre}
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium">Email:</p>
-                <p className="text-sm">
+                <p className="text-base font-medium">Email:</p>
+                <p className="text-base">
                   {selectedTicket.user?.email || "No disponible"}
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium">Asunto:</p>
-                <p className="text-sm">{selectedTicket.asunto}</p>
+                <p className="text-base font-medium">Asunto:</p>
+                <p className="text-base">{selectedTicket.asunto}</p>
               </div>
               <div>
-                <p className="text-sm font-medium">Detalle:</p>
-                <p className="text-sm">{selectedTicket.detalle}</p>
+                <p className="text-base font-medium">Detalle:</p>
+                <p className="text-base">{selectedTicket.detalle}</p>
               </div>
               <div>
-                <p className="text-sm font-medium">Prioridad:</p>
+                <p className="text-base font-medium">Prioridad:</p>
                 <Badge
                   className={getPriorityColor(
-                    selectedTicket.prioridad === "crítica" ? "critical" : "high"
+                    selectedTicket.prioridad === "crítica"
+                      ? "critical"
+                      : "high"
                   )}
                 >
                   {selectedTicket.prioridad}
                 </Badge>
               </div>
               <div>
-                <p className="text-sm font-medium">Estado:</p>
-                <Badge
-                  className={getEstadoBadgeColor(selectedTicket.estado)}
-                >
+                <p className="text-base font-medium">Estado:</p>
+                <Badge className={getEstadoBadgeColor(selectedTicket.estado)}>
                   {selectedTicket.estado}
                 </Badge>
               </div>
               <div>
-                <p className="text-sm font-medium">Creado:</p>
-                <p className="text-sm">
+                <p className="text-base font-medium">Creado:</p>
+                <p className="text-base">
                   {new Date(selectedTicket.createdAt).toLocaleString("es-ES")}
                 </p>
               </div>
@@ -604,14 +598,14 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
               <input
                 type="text"
                 placeholder="Buscar por nombre o email..."
-                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/60"
+                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-primary/60"
                 value={adminSearch}
                 onChange={(e) => setAdminSearch(e.target.value)}
               />
             </div>
 
             <div className="border border-border/60 rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
+              <table className="w-full text-base">
                 <thead className="bg-muted/40">
                   <tr>
                     <th className="text-left px-3 py-2">Nombre</th>
@@ -626,10 +620,8 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
                       <td className="px-3 py-2">{admin.nombre}</td>
                       <td className="px-3 py-2">{admin.email}</td>
                       <td className="px-3 py-2">
-                        <Badge variant="outline" className="text-xs">
-                          {admin.rol === "admin"
-                            ? "Administrador"
-                            : "Cliente"}
+                        <Badge variant="outline" className="text-sm">
+                          {admin.rol === "admin" ? "Administrador" : "Cliente"}
                         </Badge>
                       </td>
                       <td className="px-3 py-2">
@@ -642,7 +634,7 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
                     <tr>
                       <td
                         colSpan={4}
-                        className="px-3 py-4 text-center text-muted-foreground text-sm"
+                        className="px-3 py-4 text-center text-muted-foreground text-base"
                       >
                         No se encontraron administradores.
                       </td>
@@ -653,7 +645,7 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
             </div>
 
             <div className="flex items-center justify-end gap-2">
-              <span className="text-xs text-muted-foreground mr-2">
+              <span className="text-sm text-muted-foreground mr-2">
                 Página {adminPage} de {adminTotalPages}
               </span>
               <Button
@@ -690,14 +682,14 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
               <input
                 type="text"
                 placeholder="Buscar por nombre o email..."
-                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/60"
+                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-primary/60"
                 value={pendingSearch}
                 onChange={(e) => setPendingSearch(e.target.value)}
               />
             </div>
 
             <div className="border border-border/60 rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
+              <table className="w-full text-base">
                 <thead className="bg-muted/40">
                   <tr>
                     <th className="text-left px-3 py-2">Nombre</th>
@@ -720,14 +712,14 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-xs"
+                          className="text-sm"
                           onClick={() => handleApproveAsClient(user.id)}
                         >
                           Aprobar como cliente
                         </Button>
                         <Button
                           size="sm"
-                          className="text-xs"
+                          className="text-sm"
                           onClick={() => handleApproveAndMakeAdmin(user.id)}
                         >
                           Aprobar como admin
@@ -740,7 +732,7 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
                     <tr>
                       <td
                         colSpan={4}
-                        className="px-3 py-4 text-center text-muted-foreground text-sm"
+                        className="px-3 py-4 text-center text-muted-foreground text-base"
                       >
                         No hay cuentas pendientes.
                       </td>
@@ -751,7 +743,7 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
             </div>
 
             <div className="flex items-center justify-end gap-2">
-              <span className="text-xs text-muted-foreground mr-2">
+              <span className="text-sm text-muted-foreground mr-2">
                 Página {pendingPage} de {pendingTotalPages}
               </span>
               <Button
@@ -794,14 +786,14 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
             <div className="space-y-1">
               <label
                 htmlFor="edit-name"
-                className="text-sm font-medium"
+                className="text-base font-medium"
               >
                 Nombre
               </label>
               <input
                 id="edit-name"
                 type="text"
-                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/60"
+                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-primary/60"
                 value={currentAdmin.nombre}
                 placeholder="Ingresa tu nombre"
                 aria-label="Nombre del administrador"
@@ -817,14 +809,14 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
             <div className="space-y-1">
               <label
                 htmlFor="edit-email"
-                className="text-sm font-medium"
+                className="text-base font-medium"
               >
                 Email
               </label>
               <input
                 id="edit-email"
                 type="email"
-                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/60"
+                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-primary/60"
                 value={currentAdmin.email}
                 placeholder="Ingresa tu email"
                 aria-label="Email del administrador"
@@ -840,14 +832,14 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
             <div className="space-y-1">
               <label
                 htmlFor="edit-password"
-                className="text-sm font-medium"
+                className="text-base font-medium"
               >
                 Nueva contraseña
               </label>
               <input
                 id="edit-password"
                 type="password"
-                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/60"
+                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-primary/60"
                 value={currentAdmin.password}
                 placeholder="Deja vacío para no cambiarla"
                 aria-label="Nueva contraseña del administrador"
@@ -858,7 +850,7 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
                   }))
                 }
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-base text-muted-foreground">
                 Si la dejas vacía, se mantiene la contraseña actual (demo).
               </p>
             </div>
@@ -877,41 +869,49 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!successMessage} onOpenChange={() => setSuccessMessage(null)}>
-  <DialogContent className="max-w-sm text-center">
-    <DialogHeader>
-      <DialogTitle className="flex items-center justify-center gap-2">
-        <CheckCircle className="h-5 w-5 text-success" />
-        Ticket resuelto
-      </DialogTitle>
-    </DialogHeader>
+      <Dialog
+        open={!!successMessage}
+        onOpenChange={() => setSuccessMessage(null)}
+      >
+        <DialogContent className="max-w-base text-center">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-center gap-2">
+              <CheckCircle className="h-5 w-5 text-success" />
+              Ticket resuelto
+            </DialogTitle>
+          </DialogHeader>
 
-    <p className="text-sm text-muted-foreground mt-2">
-      {successMessage}
-    </p>
+          <p className="text-base text-muted-foreground mt-2">
+            {successMessage}
+          </p>
 
-    <div className="mt-4 flex justify-center">
-      <Button onClick={() => setSuccessMessage(null)}>
-        Aceptar
-      </Button>
-    </div>
-  </DialogContent>
-</Dialog>
+          <div className="mt-4 flex justify-center">
+            <Button onClick={() => setSuccessMessage(null)}>Aceptar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      <header className="sticky top-0 z-10 border-b border-border/50 bg-card/30 backdrop-blur-sm">
+      <header className="sticky top-0 z-10 border-b border-border/50 bg-card/30 backdrop-blur-base">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 rounded-lg bg-gradient-primary p-1.5">
                 <Shield className="w-full h-full text-white" />
               </div>
-              <h1 className="text-xl font-bold text-gradient">Dashboard Admin</h1>
+              <h1 className="text-2xl font-bold text-gradient">
+                Dashboard Admin
+              </h1>
             </div>
           </div>
 
           <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="sm">
-              <Bell className="h-4 w-4" />
+            <Button variant="ghost" size="sm" className="relative">
+              <Bell className="h-6 w-6" />
+              {notificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-[10px] font-semibold text-white flex items-center justify-center">
+                  {notificationCount > 99 ? "99+" : notificationCount}
+                </span>
+              )}
             </Button>
 
             <div className="relative">
@@ -920,25 +920,25 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
                 size="sm"
                 onClick={() => setSettingsMenuOpen((prev) => !prev)}
               >
-                <Settings className="h-4 w-4" />
+                <Settings className="h-6 w-6" />
               </Button>
 
               {settingsMenuOpen && (
                 <div className="absolute right-0 mt-2 w-52 rounded-md border border-border/60 bg-card shadow-lg z-20">
                   <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent/40 transition-colors"
+                    className="w-full text-left px-3 py-2 text-base hover:bg-accent/40 transition-colors"
                     onClick={handleOpenAdminsModal}
                   >
                     Administradores
                   </button>
                   <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent/40 transition-colors"
+                    className="w-full text-left px-3 py-2 text-base hover:bg-accent/40 transition-colors"
                     onClick={handleOpenPendingModal}
                   >
                     Cuentas por aprobar
                   </button>
                   <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent/40 transition-colors border-t border-border/40"
+                    className="w-full text-left px-3 py-2 text-base hover:bg-accent/40 transition-colors border-t border-border/40"
                     onClick={handleOpenEditProfileModal}
                   >
                     Editar mi perfil
@@ -953,10 +953,10 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
                   A
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium">Admin</span>
+              <span className="text-base font-medium">Admin</span>
             </div>
             <Button variant="ghost" size="sm" onClick={onLogout}>
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-6 w-6" />
             </Button>
           </div>
         </div>
@@ -975,16 +975,16 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="glass-effect border-border/50">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
+                    <CardTitle className="text-base font-medium">
                       Usuarios Activos
                     </CardTitle>
-                    <Users className="h-4 w-4 text-primary" />
+                    <Users className="h-5 w-5 text-primary" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">
+                    <div className="text-3xl font-bold">
                       {stats.totalUsers.toLocaleString()}
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-base text-muted-foreground">
                       <span className="text-success">+12%</span> desde el mes
                       pasado
                     </p>
@@ -993,7 +993,7 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
                 <Card className="glass-effect border-border/50">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
+                    <CardTitle className="text-base font-medium">
                       Chats Activos
                     </CardTitle>
                     <MessageSquare className="h-4 w-4 text-accent" />
@@ -1002,7 +1002,7 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
                     <div className="text-2xl font-bold">
                       {stats.activeChats}
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-base text-muted-foreground">
                       <span className="text-success">+5%</span> vs ayer
                     </p>
                   </CardContent>
@@ -1010,7 +1010,7 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
                 <Card className="glass-effect border-border/50">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
+                    <CardTitle className="text-base font-medium">
                       Tickets Generados
                     </CardTitle>
                     <AlertTriangle className="h-4 w-4 text-warning" />
@@ -1019,7 +1019,7 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
                     <div className="text-2xl font-bold text-warning">
                       {stats.totalTickets}
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-base text-muted-foreground">
                       Requieren atención inmediata
                     </p>
                   </CardContent>
@@ -1027,7 +1027,7 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
                 <Card className="glass-effect border-border/50">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
+                    <CardTitle className="text-base font-medium">
                       Resueltos Hoy
                     </CardTitle>
                     <CheckCircle className="h-4 w-4 text-success" />
@@ -1036,7 +1036,7 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
                     <div className="text-2xl font-bold text-success">
                       {stats.resolvedToday}
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-base text-muted-foreground">
                       Meta: 50 tickets
                     </p>
                   </CardContent>
@@ -1046,8 +1046,8 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <Card className="lg:col-span-2 glass-effect border-border/50">
                   <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <TrendingUp className="h-5 w-5" />
+                    <CardTitle className="flex items-center space-x-2 text-lg">
+                      <TrendingUp className="h-6 w-6" />
                       <span>Actividad Semanal</span>
                     </CardTitle>
                     <CardDescription>
@@ -1090,9 +1090,9 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
                 <Card className="glass-effect border-border/50">
                   <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
+                    <CardTitle className="flex items-center justify-between text-lg">
                       <div className="flex items-center space-x-2">
-                        <AlertTriangle className="h-5 w-5 text-warning" />
+                        <AlertTriangle className="h-6 w-6 text-warning" />
                         <span>Tickets</span>
                       </div>
                       <Button size="sm" variant="ghost">
@@ -1109,7 +1109,7 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
                             className="border border-border/50 rounded-lg p-3 space-y-3"
                           >
                             <div className="flex items-start justify-between gap-2">
-                              <h4 className="font-medium text-sm flex-1 line-clamp-2 pr-2">
+                              <h4 className="font-medium text-base flex-1 line-clamp-2 pr-2">
                                 {ticket.detalle}
                               </h4>
                               <Badge
@@ -1122,11 +1122,11 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
                               </Badge>
                             </div>
                             <div className="flex items-center justify-between">
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-base text-muted-foreground">
                                 {ticket.user?.nombre ||
                                   ticket.clienteNombre}
                               </p>
-                              <div className="flex items-center text-xs text-muted-foreground">
+                              <div className="flex items-center text-sm text-muted-foreground">
                                 <Clock className="h-3 w-3 mr-1" />
                                 <span>
                                   {new Date(
@@ -1172,7 +1172,7 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
                     <ScrollArea className="h-[350px]">
                       <div className="space-y-3 pr-4">
                         {recentQueries.length === 0 ? (
-                          <div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm">
+                          <div className="flex items-center justify-center h-[300px] text-muted-foreground text-base">
                             No hay consultas recientes
                           </div>
                         ) : (
@@ -1203,27 +1203,27 @@ const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between mb-1">
-                                      <p className="text-sm font-semibold text-foreground truncate">
+                                      <p className="text-base font-semibold text-foreground truncate">
                                         {query.userName}
                                       </p>
-                                      <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
+                                      <span className="text-base text-muted-foreground whitespace-nowrap ml-2">
                                         {formatTime(
                                           new Date(query.timestamp)
                                         )}
                                       </span>
                                     </div>
 
-                                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                                    <p className="text-base text-muted-foreground line-clamp-2 mb-2">
                                       {query.content}
                                     </p>
 
                                     <div className="flex items-center justify-between">
-                                      <span className="text-xs text-muted-foreground">
+                                      <span className="text-sm text-muted-foreground">
                                         Chat #{query.chatId}
                                       </span>
                                       <Badge
                                         variant="outline"
-                                        className="text-xs"
+                                        className="text-sm"
                                       >
                                         <MessageSquare className="h-3 w-3 mr-1" />
                                         Consulta

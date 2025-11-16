@@ -217,7 +217,7 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
                 <div className="flex justify-between"><span className="text-sm font-medium">Cliente:</span><span className="text-sm">{pendingTicket?.clientName}</span></div>
                 <div className="border-t pt-2 mt-2"><span className="text-sm font-medium block mb-1">Asunto:</span><span className="text-sm text-muted-foreground line-clamp-3">{pendingTicket?.subject}</span></div>
               </div>
-              <span className="text-xs text-center block">Se notificará por WhatsApp</span>
+              <span className="text-sm text-center block">Se notificará por WhatsApp</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

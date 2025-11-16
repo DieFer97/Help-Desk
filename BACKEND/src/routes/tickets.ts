@@ -60,7 +60,7 @@ router.get(
       orderBy: { timestamp: "desc" },
       select: { id: true, sender: true, content: true }
     })
-    console.log("🔍 DEBUG - Valores de sender en BD:", 
+    console.log("🔍 DEBUG - Valores de sender en BD:",
       allMessages.map(m => ({ id: m.id, sender: m.sender, preview: m.content.substring(0, 30) }))
     )
 
@@ -151,25 +151,28 @@ router.get(
     );
 
     const tickets = await prisma.ticket.findMany({
-      select: { asunto: true },
+      select: { detalle: true },
     });
 
     const categoryCount: Record<string, number> = {
-      Técnico: 0,
-      Facturación: 0,
-      Soporte: 0,
+      Clientes: 0,
       Ventas: 0,
+      Productos: 0,
+      Otros: 0,
     };
 
     tickets.forEach((t) => {
-      const key = t.asunto.toLowerCase();
-      if (key.includes("factur") || key.includes("pago") || key.includes("cobro"))
-        categoryCount["Facturación"]++;
-      else if (key.includes("técnico") || key.includes("error") || key.includes("sistema"))
-        categoryCount["Técnico"]++;
-      else if (key.includes("soporte") || key.includes("ayuda") || key.includes("duda"))
-        categoryCount["Soporte"]++;
-      else categoryCount["Ventas"]++;
+      const key = (t.detalle || "").toLowerCase();
+
+      if (key.includes("cliente") || key.includes("clientes")) {
+        categoryCount["Clientes"]++;
+      } else if (key.includes("venta") || key.includes("ventas")) {
+        categoryCount["Ventas"]++;
+      } else if (key.includes("producto") || key.includes("productos")) {
+        categoryCount["Productos"]++;
+      } else {
+        categoryCount["Otros"]++;
+      }
     });
 
     const categories = Object.entries(categoryCount)
@@ -177,10 +180,10 @@ router.get(
         name,
         value,
         color: {
-          Técnico: "#8b5cf6",
-          Facturación: "#06b6d4",
-          Soporte: "#10b981",
+          Clientes: "#6366f1",
           Ventas: "#f59e0b",
+          Productos: "#06b6d4",
+          Otros: "#10b981",
         }[name],
       }))
       .filter((c) => c.value > 0);
