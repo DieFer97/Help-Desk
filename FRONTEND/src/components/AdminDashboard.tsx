@@ -73,6 +73,22 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
+interface AdminUser {
+  id: number;
+  nombre: string;
+  email: string;
+  rol: "admin" | "cliente";
+  creadoEl: string;
+}
+
+interface PendingUser {
+  id: number;
+  nombre: string;
+  email: string;
+  rol: "admin" | "cliente";
+  creadoEl: string;
+}
+
 const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -93,6 +109,109 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [hoveredQuery, setHoveredQuery] = useState<number | null>(null);
+
+  const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
+
+  const [admins, setAdmins] = useState<AdminUser[]>([
+  {
+    id: 6,
+    nombre: "Ricardo Kaká",
+    email: "riki10@gmail.com",
+    rol: "admin",
+    creadoEl: "2025-10-26T19:50:46.249Z",
+  },
+  {
+    id: 2,
+    nombre: "Juan Perez",
+    email: "juan.perez@example.com",
+    rol: "admin",
+    creadoEl: "2025-10-20T21:47:57.258Z",
+  },
+  {
+    id: 3,
+    nombre: "Diego De Almagro",
+    email: "diefer97gmail.com",
+    rol: "admin",
+    creadoEl: "2025-10-21T23:20:21.285Z",
+  },
+  {
+    id: 4,
+    nombre: "Luca Toni",
+    email: "luca@toni.com",
+    rol: "admin",
+    creadoEl: "2025-10-24T18:26:16.260Z",
+  },
+  {
+    id: 5,
+    nombre: "Mike Ortiz",
+    email: "portero@gmail.com",
+    rol: "admin",
+    creadoEl: "2025-10-26T19:56:40.249Z",
+  },
+  {
+    id: 7,
+    nombre: "Paul Elstak",
+    email: "goat1@gmail.com",
+    rol: "admin",
+    creadoEl: "2025-10-30T21:40:16.128Z",
+  },
+]);
+
+  const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([
+  {
+    id: 8,
+    nombre: "Cristiano Ronaldo",
+    email: "cr7@gmail.com",
+    rol: "cliente",
+    creadoEl: "2025-11-02T20:49:33.215Z",
+  },
+  {
+    id: 9,
+    nombre: "Sosimo Sacramento",
+    email: "sosimo32@gmail.com",
+    rol: "cliente",
+    creadoEl: "2025-11-03T21:39:24.215Z",
+  },
+  {
+    id: 10,
+    nombre: "Martin Garrix",
+    email: "martin1@gmail.com",
+    rol: "cliente",
+    creadoEl: "2025-11-04T13:02:31.093Z",
+  },
+  {
+    id: 11,
+    nombre: "Hugo Garcia",
+    email: "hugito7@gmail.com",
+    rol: "cliente",
+    creadoEl: "2025-11-11T20:27:26.267Z",
+  },
+  {
+    id: 12,
+    nombre: "Piere Papin",
+    email: "piere9@hotmail.com",
+    rol: "cliente",
+    creadoEl: "2025-11-14T20:08:58.545Z",
+  },
+  {
+    id: 1,
+    nombre: "Marco Van Basten",
+    email: "goleador9@gmail.com",
+    rol: "cliente",
+    creadoEl: "2025-10-19T10:00:00.000Z",
+  },
+]);
+
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const [pendingModalOpen, setPendingModalOpen] = useState(false);
+
+  const [adminSearch, setAdminSearch] = useState("");
+  const [pendingSearch, setPendingSearch] = useState("");
+
+  const [adminPage, setAdminPage] = useState(1);
+  const [pendingPage, setPendingPage] = useState(1);
+
+  const pageSize = 5;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -246,6 +365,70 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
   const formatTime = (d: Date) => d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
 
+
+  const filteredAdmins = admins.filter(a =>
+    a.nombre.toLowerCase().includes(adminSearch.toLowerCase()) ||
+    a.email.toLowerCase().includes(adminSearch.toLowerCase())
+  );
+
+  const filteredPending = pendingUsers.filter(u =>
+    u.nombre.toLowerCase().includes(pendingSearch.toLowerCase()) ||
+    u.email.toLowerCase().includes(pendingSearch.toLowerCase())
+  );
+
+  const adminTotalPages = Math.max(1, Math.ceil(filteredAdmins.length / 5));
+  const pendingTotalPages = Math.max(1, Math.ceil(filteredPending.length / 5));
+
+  const paginatedAdmins = filteredAdmins.slice((adminPage - 1) * 5, adminPage * 5);
+  const paginatedPending = filteredPending.slice((pendingPage - 1) * 5, pendingPage * 5);
+
+  useEffect(() => {
+    setAdminPage(1);
+  }, [adminSearch]);
+
+  useEffect(() => {
+    setPendingPage(1);
+  }, [pendingSearch]);
+
+  const handleOpenAdminsModal = () => {
+    setAdminModalOpen(true);
+    setSettingsMenuOpen(false);
+  };
+
+  const handleOpenPendingModal = () => {
+    setPendingModalOpen(true);
+    setSettingsMenuOpen(false);
+  };
+
+  const handleChangeUserRole = (userId: number, newRole: "admin" | "cliente") => {
+  setPendingUsers(prev =>
+    prev.map(u => u.id === userId ? { ...u, rol: newRole } : u)
+  );
+
+  const user = pendingUsers.find(u => u.id === userId);
+  if (user && newRole === "admin") {
+    setAdmins(prev => [
+      ...prev,
+      { id: user.id, nombre: user.nombre, email: user.email, rol: "admin", creadoEl: user.creadoEl }
+    ]);
+  }
+};
+
+  const handleApproveAndMakeAdmin = (userId: number) => {
+  const user = pendingUsers.find(u => u.id === userId);
+  if (user) {
+    setAdmins(prev => [
+      ...prev,
+      { id: user.id, nombre: user.nombre, email: user.email, rol: "admin", creadoEl: user.creadoEl }
+    ]);
+  }
+  setPendingUsers(prev => prev.filter(u => u.id !== userId));
+};
+
+const handleApproveAsClient = (userId: number) => {
+  setPendingUsers(prev => prev.filter(u => u.id !== userId));
+};
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-background">
       <Dialog open={!!selectedTicket} onOpenChange={() => setSelectedTicket(null)}>
@@ -304,6 +487,180 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={adminModalOpen} onOpenChange={setAdminModalOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Administradores</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <input
+                type="text"
+                placeholder="Buscar por nombre o email..."
+                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/60"
+                value={adminSearch}
+                onChange={e => setAdminSearch(e.target.value)}
+              />
+            </div>
+
+            <div className="border border-border/60 rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40">
+                  <tr>
+                    <th className="text-left px-3 py-2">Nombre</th>
+                    <th className="text-left px-3 py-2">Email</th>
+                    <th className="text-left px-3 py-2">Rol</th>
+                    <th className="text-left px-3 py-2">Creado el</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedAdmins.map(admin => (
+                    <tr key={admin.id} className="border-t border-border/40">
+                      <td className="px-3 py-2">{admin.nombre}</td>
+                      <td className="px-3 py-2">{admin.email}</td>
+                      <td className="px-3 py-2">
+                        <Badge variant="outline" className="text-xs">
+                          {admin.rol === "admin" ? "Administrador" : "Cliente"}
+                        </Badge>
+                      </td>
+                      <td className="px-3 py-2">
+                        {new Date(admin.creadoEl).toLocaleDateString("es-PE")}
+                      </td>
+                    </tr>
+                  ))}
+
+                  {paginatedAdmins.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="px-3 py-4 text-center text-muted-foreground text-sm">
+                        No se encontraron administradores.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <span className="text-xs text-muted-foreground mr-2">
+                Página {adminPage} de {adminTotalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={adminPage === 1}
+                onClick={() => setAdminPage(p => Math.max(1, p - 1))}
+              >
+                ‹
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={adminPage === adminTotalPages}
+                onClick={() => setAdminPage(p => Math.min(adminTotalPages, p + 1))}
+              >
+                ›
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={pendingModalOpen} onOpenChange={setPendingModalOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Cuentas por aprobar</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <input
+                type="text"
+                placeholder="Buscar por nombre o email..."
+                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/60"
+                value={pendingSearch}
+                onChange={e => setPendingSearch(e.target.value)}
+              />
+            </div>
+
+            <div className="border border-border/60 rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40">
+                  <tr>
+                    <th className="text-left px-3 py-2">Nombre</th>
+                    <th className="text-left px-3 py-2">Email</th>
+                    <th className="text-left px-3 py-2">Creado el</th>
+                    <th className="px-3 py-2">
+                    <div className="flex justify-center">
+                      Acciones
+                    </div>
+                  </th>
+                  </tr>
+                </thead>
+                <tbody>
+  {paginatedPending.map(user => (
+    <tr key={user.id} className="border-t border-border/40">
+      <td className="px-3 py-2">{user.nombre}</td>
+      <td className="px-3 py-2">{user.email}</td>
+      <td className="px-3 py-2">
+        {new Date(user.creadoEl).toLocaleDateString("es-PE")}
+      </td>
+      <td className="px-3 py-2 text-right space-x-2">
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-xs"
+          onClick={() => handleApproveAsClient(user.id)}
+        >
+          Aprobar como cliente
+        </Button>
+        <Button
+          size="sm"
+          className="text-xs"
+          onClick={() => handleApproveAndMakeAdmin(user.id)}
+        >
+          Aprobar como admin
+        </Button>
+      </td>
+    </tr>
+  ))}
+
+  {paginatedPending.length === 0 && (
+    <tr>
+      <td colSpan={4} className="px-3 py-4 text-center text-muted-foreground text-sm">
+        No hay cuentas pendientes.
+      </td>
+    </tr>
+  )}
+</tbody>
+              </table>
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <span className="text-xs text-muted-foreground mr-2">
+                Página {pendingPage} de {pendingTotalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={pendingPage === 1}
+                onClick={() => setPendingPage(p => Math.max(1, p - 1))}
+              >
+                ‹
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={pendingPage === pendingTotalPages}
+                onClick={() => setPendingPage(p => Math.min(pendingTotalPages, p + 1))}
+              >
+                ›
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <header className="sticky top-0 z-10 border-b border-border/50 bg-card/30 backdrop-blur-sm">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center space-x-4">
@@ -319,9 +676,34 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
             <Button variant="ghost" size="sm">
               <Bell className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm">
-              <Settings className="h-4 w-4" />
-            </Button>
+
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSettingsMenuOpen(prev => !prev)}
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+
+              {settingsMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-md border border-border/60 bg-card shadow-lg z-20">
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent/40 transition-colors"
+                    onClick={handleOpenAdminsModal}
+                  >
+                    Administradores
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent/40 transition-colors"
+                    onClick={handleOpenPendingModal}
+                  >
+                    Cuentas por aprobar
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center space-x-2">
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="bg-primary text-primary-foreground">
