@@ -47,4 +47,5 @@ const Index = () => {
   return <ChatInterface onLogout={handleLogout} />
 }
 
+
 export default Index

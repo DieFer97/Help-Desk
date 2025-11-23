@@ -56,7 +56,6 @@ const AppContent = () => {
     setCurrentView('app')
   }
 
-  // Mostrar Landing Page
   if (currentView === 'landing') {
     return <LandingPage onStartLogin={handleStartLogin} />
   }

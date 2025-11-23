@@ -1,7 +1,11 @@
 "use client"
 
+
+
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
+
+
 
 import {
   AlertDialog,
@@ -27,10 +31,14 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Bot, ImageIcon, LogOut, Plus, Send, Settings, Ticket, Trash2, User, X } from "lucide-react"
+import { Bot, CheckCircle2, ImageIcon, LogOut, Plus, Send, Settings, Ticket, Trash2, User, X } from "lucide-react"
+
+
 
 import { useAuth } from "../contexts/AuthContext"
 import { useChats, type TicketSuggestion } from "../hooks/useChats"
+
+
 
 interface Message {
   id: string
@@ -40,6 +48,8 @@ interface Message {
   imageUrl?: string
 }
 
+
+
 interface Chat {
   id: string
   title: string
@@ -48,9 +58,13 @@ interface Chat {
   messages: Message[]
 }
 
+
+
 interface ChatInterfaceProps {
   onLogout: () => void
 }
+
+
 
 const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
   const { user, token } = useAuth()
@@ -66,6 +80,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
     deleteChat,
   } = useChats()
 
+
+
   const [currentInput, setCurrentInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [activeChat, setActiveChat] = useState<string>("")
@@ -74,20 +90,34 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
   const [hoveredChat, setHoveredChat] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+
+
   const [showTicketDialog, setShowTicketDialog] = useState(false)
   const [pendingTicket, setPendingTicket] = useState<TicketSuggestion | null>(null)
   const [isCreatingTicket, setIsCreatingTicket] = useState(false)
   const [chatsLoaded, setChatsLoaded] = useState(false)
+
+
 
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [editedName, setEditedName] = useState(user?.nombre || "")
   const [editedEmail, setEditedEmail] = useState(user?.email || "")
   const [editedPassword, setEditedPassword] = useState("")
 
+
+
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false)
+  const [showTicketSuccessDialog, setShowTicketSuccessDialog] = useState(false)
+  const [createdTicketNumber, setCreatedTicketNumber] = useState("")
+
+
+
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
+
+
 
   useEffect(() => {
     if (!chatsLoaded && !chatsLoading && token) {
@@ -95,16 +125,24 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
     }
   }, [chatsLoaded, chatsLoading, token, loadChats])
 
+
+
   useEffect(() => {
     if (activeChat && token) loadChatMessages(activeChat)
   }, [activeChat, token, loadChatMessages])
+
+
 
   useEffect(() => {
     setEditedName(user?.nombre || "")
     setEditedEmail(user?.email || "")
   }, [user])
 
+
+
   const currentChat = chats.find((chat) => chat.id === activeChat)
+
+
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -121,12 +159,16 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
     if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
+
+
   const clearSelectedImage = () => {
     if (selectedImage) {
       URL.revokeObjectURL(selectedImage.url)
       setSelectedImage(null)
     }
   }
+
+
 
   const sendUserMessage = async () => {
     if ((!currentInput.trim() && !selectedImage) || isLoading || !activeChat) return
@@ -150,20 +192,25 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
     }
   }
 
+
+
   const handleConfirmTicket = async () => {
     if (!pendingTicket) return
     setIsCreatingTicket(true)
     try {
       await confirmTicket(pendingTicket.ticketNumber)
-      alert(`Ticket ${pendingTicket.ticketNumber} creado`)
+      setCreatedTicketNumber(pendingTicket.ticketNumber)
       setShowTicketDialog(false)
       setPendingTicket(null)
+      setShowTicketSuccessDialog(true)
     } catch {
       alert("Error al crear ticket")
     } finally {
       setIsCreatingTicket(false)
     }
   }
+
+
 
   const handleCancelTicket = async () => {
     if (!pendingTicket) {
@@ -179,6 +226,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
     setPendingTicket(null)
   }
 
+
+
   const createNewChat = async () => {
     try {
       const nc = await createChat("Cargando...")
@@ -187,6 +236,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
       alert("Error al crear chat")
     }
   }
+
+
 
   const handleDeleteChat = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -199,8 +250,12 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
     }
   }
 
+
+
   const formatTime = (d: Date) => d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })
   const formatDateTime = (d: Date) => d.toLocaleString("es-PE", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "America/Lima", hour12: false })
+
+
 
   return (
     <div className="h-screen flex bg-gradient-background">
@@ -228,6 +283,62 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+
+
+      <AlertDialog open={showTicketSuccessDialog} onOpenChange={setShowTicketSuccessDialog}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              Ticket creado exitosamente
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              El ticket <span className="font-bold text-primary">{createdTicketNumber}</span> ha sido creado correctamente y se ha enviado la notificación por WhatsApp.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction 
+              onClick={() => setShowTicketSuccessDialog(false)}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Aceptar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
+
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <LogOut className="h-5 w-5 text-primary" />
+              ¿Cerrar sesión?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro que deseas cerrar sesión?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowLogoutDialog(false)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                setShowLogoutDialog(false)
+                onLogout()
+              }}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Sí, cerrar sesión
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
 
       <Dialog open={isEditingProfile} onOpenChange={setIsEditingProfile}>
         <DialogContent className="sm:max-w-md">
@@ -286,6 +397,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
         </DialogContent>
       </Dialog>
 
+
+
       <div className="w-80 border-r border-border/50 flex flex-col bg-card/30 backdrop-blur-sm">
         <div className="p-4 border-b border-border/50">
           <div className="flex items-center justify-between mb-4">
@@ -302,6 +415,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
           </Button>
         </div>
 
+
+
         <ScrollArea className="flex-1">
           <div className="px-4 py-4 space-y-4">
             {chats.map((chat) => {
@@ -309,6 +424,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
                 ? chat.messages.slice().reverse().find(m => m.sender === "user")?.content
                 : null
               const previewText = lastUserMsg || chat.title
+
+
 
               return (
                 <Card
@@ -326,6 +443,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm text-foreground truncate">{previewText}</p>
                     </div>
+
+
 
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -348,6 +467,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
           </div>
         </ScrollArea>
 
+
+
         <div className="border-t border-border/50 bg-card/30 backdrop-blur-sm">
           <div className="flex items-center h-20 px-6 justify-between">
             <div className="flex items-center space-x-4">
@@ -361,12 +482,14 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
                 <p className="text-sm text-muted-foreground">En línea</p>
               </div>
             </div>
-            <Button size="icon" variant="ghost" onClick={onLogout} className="h-10 w-10">
+            <Button size="icon" variant="ghost" onClick={() => setShowLogoutDialog(true)} className="h-10 w-10">
               <LogOut className="h-5 w-5" />
             </Button>
           </div>
         </div>
       </div>
+
+
 
       <div className="flex-1 flex flex-col">
         <div className="p-4 border-b border-border/50 bg-card/30 backdrop-blur-sm flex items-center justify-between">
@@ -384,6 +507,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
             <p className="text-xs text-muted-foreground">Huánuco, Perú</p>
           </div>
         </div>
+
+
 
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-4">
@@ -408,6 +533,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
           </div>
         </ScrollArea>
 
+
+
         <div className="border-t border-border/50 bg-card/30 backdrop-blur-sm">
           <div className="flex items-center h-20 px-6 gap-4">
             <div className="flex-1 flex items-end space-x-3">
@@ -421,6 +548,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
                 aria-label="Mensaje"
               />
 
+
+
               <Button 
                 size="icon" 
                 variant="ghost" 
@@ -432,6 +561,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
                 <ImageIcon className="h-6 w-6" />
               </Button>
 
+
+
               <input
                 type="file"
                 ref={fileInputRef}
@@ -440,6 +571,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
                 aria-label="Subir imagen"
                 onChange={handleImageUpload}
               />
+
+
 
               <Button 
                 onClick={sendUserMessage} 
@@ -455,6 +588,8 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
               </Button>
             </div>
           </div>
+
+
 
           {selectedImage && (
             <div className="px-6 pb-3 flex items-center space-x-3">
@@ -478,5 +613,7 @@ const ChatInterface = ({ onLogout }: ChatInterfaceProps) => {
     </div>
   )
 }
+
+
 
 export default ChatInterface

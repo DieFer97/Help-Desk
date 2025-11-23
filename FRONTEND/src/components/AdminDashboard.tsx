@@ -1,3 +1,13 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -160,17 +170,17 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([
     {
       id: 8,
-      nombre: "Cristiano Ronaldo",
-      email: "cr7@gmail.com",
+      nombre: "Ricardo Palma",
+      email: "ricardo99@gmail.com",
       rol: "cliente",
-      creadoEl: "2025-11-02T20:49:33.215Z",
+      creadoEl: "2025-11-25T20:49:33.215Z",
     },
     {
       id: 9,
       nombre: "Sosimo Sacramento",
       email: "sosimo32@gmail.com",
       rol: "cliente",
-      creadoEl: "2025-11-03T21:39:24.215Z",
+      creadoEl: "2025-11-02T21:39:24.215Z",
     },
     {
       id: 10,
@@ -224,6 +234,8 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
   const [notificationCount, setNotificationCount] = useState(0);
 
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
@@ -274,20 +286,20 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
       setNotificationCount(pendingToday);
 
       const weeklyTickets = stats.weeklyTickets || [];
-const weeklyQueries = stats.weeklyQueries || [];
+      const weeklyQueries = stats.weeklyQueries || [];
 
-const weeklyData: WeeklyData[] = weeklyTickets.map(
-  (d: { name: string; tickets: number }, index: number) => ({
-    name: d.name,
-    tickets: d.tickets,
-    consultas: weeklyQueries[index]?.consultas ?? 0,
-  })
-);
+      const weeklyData: WeeklyData[] = weeklyTickets.map(
+        (d: { name: string; tickets: number }, index: number) => ({
+          name: d.name,
+          tickets: d.tickets,
+          consultas: weeklyQueries[index]?.consultas ?? 0,
+        })
+      );
 
-setChartData({
-  weekly: weeklyData,
-  categories: stats.categories || [],
-});
+      setChartData({
+        weekly: weeklyData,
+        categories: stats.categories || [],
+      });
     } catch (err) {
       console.error("Error cargando dashboard:", err);
       setStats({
@@ -590,6 +602,34 @@ setChartData({
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <LogOut className="h-5 w-5 text-primary" />
+              ¿Cerrar sesión?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro que deseas cerrar sesión?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowLogoutDialog(false)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                setShowLogoutDialog(false)
+                onLogout()
+              }}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Sí, cerrar sesión
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={adminModalOpen} onOpenChange={setAdminModalOpen}>
         <DialogContent className="max-w-3xl">
@@ -959,7 +999,7 @@ setChartData({
               </Avatar>
               <span className="text-base font-medium">Admin</span>
             </div>
-            <Button variant="ghost" size="sm" onClick={onLogout}>
+            <Button variant="ghost" size="sm" onClick={() => setShowLogoutDialog(true)}>
               <LogOut className="h-6 w-6" />
             </Button>
           </div>

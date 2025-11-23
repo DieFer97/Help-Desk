@@ -1,7 +1,5 @@
 "use client"
 
-/* eslint-disable react-refresh/only-export-components */
-
 import type React from "react"
 import { useContext, useEffect, useState } from "react"
 import { AuthContext } from "./auth"
